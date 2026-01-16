@@ -1,0 +1,17 @@
+{
+  "name": "food-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api": "npm run dev --workspace=apps/api",
+    "api:build": "npm run build --workspace=apps/api",
+    "mobile": "npm run start --workspace=apps/mobile"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
