@@ -30,13 +30,13 @@ profileRoutes.patch("/me", async (req, res, next) => {
   try {
     const { display_name, avatar_url } = req.body;
 
-    const updates: Record<string, string> = {};
+    const updates: { display_name?: string; avatar_url?: string } = {};
     if (display_name !== undefined) updates.display_name = display_name;
     if (avatar_url !== undefined) updates.avatar_url = avatar_url;
 
     const { data, error } = await req.supabase!
       .from("profiles")
-      .update(updates)
+      .update(updates as any)
       .eq("id", req.user!.id)
       .select()
       .single();

@@ -5,6 +5,7 @@ import { recipeRoutes } from "./routes/recipes.js";
 import { youtubeRoutes } from "./routes/youtube.js";
 import { favoritesRoutes } from "./routes/favorites.js";
 import { profileRoutes } from "./routes/profile.js";
+import { audioRoutes } from "./routes/audio.js";
 
 export const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api/recipes", recipeRoutes);
 app.use("/api/youtube", youtubeRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/audio", audioRoutes);
 
 // Error handler
 app.use(

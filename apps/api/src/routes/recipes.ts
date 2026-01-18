@@ -9,8 +9,7 @@ import {
   getAllRecipes,
   deleteRecipe,
 } from "../services/supabase.js";
-import { getVideoDetails, getVideoTranscript } from "../services/youtube.js";
-import { extractRecipeFromTranscript } from "../services/claude.js";
+import { getVideoDetails } from "../services/youtube.js";
 
 export const recipeRoutes = Router();
 
@@ -97,13 +96,46 @@ recipeRoutes.get("/:id", async (req, res, next) => {
   }
 });
 
-// Extract and save recipe from YouTube video
-recipeRoutes.post("/extract", async (req, res, next) => {
+// Check if recipe exists for video
+recipeRoutes.get("/video/:videoId", async (req, res, next) => {
   try {
-    const { videoId } = req.body;
+    const { videoId } = req.params;
 
-    if (!videoId) {
-      res.status(400).json({ error: "videoId is required" });
+    const existing = await getRecipeByVideoId(
+      req.supabase!,
+      videoId,
+      req.user!.id
+    );
+
+    if (existing) {
+      res.json({ recipe: existing, exists: true });
+    } else {
+      res.json({ recipe: null, exists: false });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Save recipe extracted on-device via Gemma 3n
+recipeRoutes.post("/", async (req, res, next) => {
+  try {
+    const {
+      videoId,
+      title,
+      description,
+      ingredients,
+      instructions,
+      tags,
+      cuisine,
+      cook_time_minutes,
+      prep_time_minutes,
+      servings,
+      difficulty,
+    } = req.body;
+
+    if (!videoId || !title) {
+      res.status(400).json({ error: "videoId and title are required" });
       return;
     }
 
@@ -119,35 +151,26 @@ recipeRoutes.post("/extract", async (req, res, next) => {
       return;
     }
 
-    // Get video details and transcript
-    const [video, transcript] = await Promise.all([
-      getVideoDetails(videoId),
-      getVideoTranscript(videoId),
-    ]);
+    // Get video details for metadata
+    const video = await getVideoDetails(videoId);
 
-    // Extract recipe using Claude
-    const recipeSummary = await extractRecipeFromTranscript(
-      transcript,
-      video.title
-    );
-
-    // Save to database with user_id
+    // Save recipe from on-device extraction
     const recipe = await saveRecipe(req.supabase!, {
       user_id: req.user!.id,
       youtube_video_id: videoId,
-      title: recipeSummary.title,
-      description: recipeSummary.description,
+      title,
+      description: description || null,
       thumbnail_url: video.thumbnailUrl,
       channel_name: video.channelTitle,
       channel_id: video.channelId,
-      ingredients: recipeSummary.ingredients,
-      instructions: recipeSummary.instructions,
-      tags: recipeSummary.tags,
-      cuisine: recipeSummary.cuisine,
-      cook_time_minutes: recipeSummary.cook_time_minutes,
-      prep_time_minutes: recipeSummary.prep_time_minutes,
-      servings: recipeSummary.servings,
-      difficulty: recipeSummary.difficulty,
+      ingredients: ingredients || [],
+      instructions: instructions || [],
+      tags: tags || [],
+      cuisine: cuisine || null,
+      cook_time_minutes: cook_time_minutes || null,
+      prep_time_minutes: prep_time_minutes || null,
+      servings: servings || null,
+      difficulty: difficulty || null,
     });
 
     res.status(201).json({ recipe, cached: false });

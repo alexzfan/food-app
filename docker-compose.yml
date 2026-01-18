@@ -17,13 +17,33 @@ services:
       - SUPABASE_URL=http://kong:8000
       - SUPABASE_ANON_KEY=${ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - AUDIO_SERVICE_URL=http://audio:8001
     depends_on:
       db:
         condition: service_healthy
       auth:
         condition: service_started
+      audio:
+        condition: service_started
+    networks:
+      - app-network
+
+  # ===========================================
+  # Audio Extraction Service (yt-dlp)
+  # ===========================================
+  audio:
+    build:
+      context: ./apps/audio-service
+      dockerfile: Dockerfile
+    container_name: recipe-audio
+    restart: unless-stopped
+    ports:
+      - "${AUDIO_SERVICE_PORT:-8001}:8001"
+    environment:
+      - MAX_DURATION_SECONDS=${MAX_VIDEO_DURATION:-900}
+    volumes:
+      - audio-cache:/tmp/recipe-audio
     networks:
       - app-network
 
@@ -45,8 +65,7 @@ services:
       JWT_EXP: ${JWT_EXPIRY:-3600}
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./apps/api/supabase/migrations:/docker-entrypoint-initdb.d/migrations:ro
-      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+      - ./docker/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 10s
@@ -217,6 +236,7 @@ services:
 
 volumes:
   db-data:
+  audio-cache:
 
 networks:
   app-network:

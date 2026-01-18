@@ -21,7 +21,6 @@
     "db:generate-types": "supabase gen types typescript --local > src/types/database.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.47.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

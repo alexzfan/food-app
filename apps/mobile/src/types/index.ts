@@ -47,3 +47,19 @@ export interface YouTubeSearchResult {
   videos: YouTubeVideo[];
   nextPageToken?: string;
 }
+
+/**
+ * Recipe summary extracted by Gemma 3n (before saving to DB)
+ */
+export interface RecipeSummary {
+  title: string;
+  description?: string;
+  ingredients: Ingredient[];
+  instructions: Instruction[];
+  tags: string[];
+  cuisine?: string;
+  cook_time_minutes?: number;
+  prep_time_minutes?: number;
+  servings?: number;
+  difficulty?: "easy" | "medium" | "hard";
+}

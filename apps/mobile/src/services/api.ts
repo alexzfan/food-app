@@ -117,12 +117,41 @@ export async function getRecipeById(id: string): Promise<Recipe> {
   return request<Recipe>(`/recipes/${id}`);
 }
 
-export async function extractRecipeFromVideo(
+export async function checkRecipeExists(
   videoId: string
+): Promise<{ recipe: Recipe | null; exists: boolean }> {
+  return request<{ recipe: Recipe | null; exists: boolean }>(
+    `/recipes/video/${videoId}`
+  );
+}
+
+export async function saveRecipe(
+  recipeData: {
+    videoId: string;
+    title: string;
+    description?: string;
+    ingredients?: Array<{
+      name: string;
+      amount?: string;
+      unit?: string;
+      notes?: string;
+    }>;
+    instructions?: Array<{
+      step: number;
+      text: string;
+      duration?: string;
+    }>;
+    tags?: string[];
+    cuisine?: string;
+    cook_time_minutes?: number;
+    prep_time_minutes?: number;
+    servings?: number;
+    difficulty?: "easy" | "medium" | "hard";
+  }
 ): Promise<{ recipe: Recipe; cached: boolean }> {
-  return request<{ recipe: Recipe; cached: boolean }>("/recipes/extract", {
+  return request<{ recipe: Recipe; cached: boolean }>("/recipes", {
     method: "POST",
-    body: JSON.stringify({ videoId }),
+    body: JSON.stringify(recipeData),
   });
 }
 
@@ -200,4 +229,35 @@ export async function resendVerificationEmail(email: string): Promise<{ message:
     },
     false // No auth required
   );
+}
+
+// ============================================
+// Audio endpoints (auth required)
+// ============================================
+
+export interface VideoInfo {
+  video_id: string;
+  title: string;
+  duration: number;
+  channel: string;
+  thumbnail?: string;
+}
+
+export async function getVideoInfo(videoId: string): Promise<VideoInfo> {
+  return request<VideoInfo>(`/audio/video/${videoId}/info`);
+}
+
+export interface TranscriptResponse {
+  video_id: string;
+  title: string;
+  duration: number;
+  transcript: string;
+  language: string;
+}
+
+/**
+ * Get transcript for a video (audio is transcribed server-side via Whisper)
+ */
+export async function getVideoTranscript(videoId: string): Promise<TranscriptResponse> {
+  return request<TranscriptResponse>(`/audio/video/${videoId}/transcript`);
 }

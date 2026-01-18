@@ -31,3 +31,6 @@ coverage/
 # Misc
 *.tmp
 *.temp
+
+# Claude Code local settings
+.claude/

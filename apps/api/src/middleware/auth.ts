@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../config/env.js";
 
 // Extend Express Request type to include user
@@ -11,7 +11,7 @@ declare global {
         email?: string;
         emailVerified: boolean;
       };
-      supabase?: ReturnType<typeof createClient>;
+      supabase?: SupabaseClient;
     }
   }
 }
@@ -145,6 +145,7 @@ export async function optionalAuthMiddleware(
     req.user = {
       id: user.id,
       email: user.email,
+      emailVerified: !!user.email_confirmed_at,
     };
     req.supabase = supabase;
   }

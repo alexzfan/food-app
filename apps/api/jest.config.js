@@ -15,4 +15,15 @@ module.exports = {
   ],
   coverageDirectory: "coverage",
   verbose: true,
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        isolatedModules: true,
+        diagnostics: {
+          ignoreCodes: [151002],
+        },
+      },
+    ],
+  },
 };

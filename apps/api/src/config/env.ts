@@ -8,8 +8,8 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  ANTHROPIC_API_KEY: z.string().min(1),
   YOUTUBE_API_KEY: z.string().min(1),
+  AUDIO_SERVICE_URL: z.string().url().default("http://localhost:8001"),
 });
 
 const parsed = envSchema.safeParse(process.env);

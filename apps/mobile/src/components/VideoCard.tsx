@@ -5,9 +5,10 @@ interface VideoCardProps {
   video: YouTubeVideo;
   onPress: () => void;
   loading?: boolean;
+  loadingText?: string;
 }
 
-export function VideoCard({ video, onPress, loading }: VideoCardProps) {
+export function VideoCard({ video, onPress, loading, loadingText }: VideoCardProps) {
   return (
     <TouchableOpacity
       style={styles.container}
@@ -21,7 +22,11 @@ export function VideoCard({ video, onPress, loading }: VideoCardProps) {
           {video.title}
         </Text>
         <Text style={styles.channel}>{video.channelTitle}</Text>
-        {loading && <Text style={styles.loading}>Extracting recipe...</Text>}
+        {loading && (
+          <Text style={styles.loading}>
+            {loadingText || "Extracting recipe..."}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );
