@@ -85,13 +85,17 @@ services:
       LLAMA_CACHE: /cache
     volumes:
       - llamacpp-data:/cache
+    # LLAMACPP_NCMOE = how many layers' MoE experts to keep in CPU RAM.
+    #   99  -> all experts in RAM (GPU-poor + lots of RAM; needs ~32GB RAM)
+    #   0   -> fully GPU-resident (when the quant ~fits VRAM)
+    #   8-16-> partial: fits a ~16GB GPU + modest RAM, leaves VRAM for KV cache
     command:
       - "-hf"
       - "${LLAMACPP_HF_MODEL:-unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}"
       - "-ngl"
       - "99"
-      - "-ot"
-      - "exps=CPU"
+      - "--n-cpu-moe"
+      - "${LLAMACPP_NCMOE:-99}"
       - "-c"
       - "${LLAMACPP_CTX:-8192}"
       - "--jinja"
