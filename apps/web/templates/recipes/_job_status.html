@@ -1,0 +1,4 @@
+<div hx-get="{% url 'job_status' job.id %}" hx-trigger="load delay:1500ms"
+     hx-swap="outerHTML">
+  <p>Status: {{ job.step_label|default:job.get_status_display }}</p>
+</div>

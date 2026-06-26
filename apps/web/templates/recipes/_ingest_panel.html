@@ -1,1 +1,28 @@
-{# ingest panel added in Task 8 #}
+<div class="ingest" x-data="{ mode: 'upload' }">
+  <div>
+    <button type="button" @click="mode='upload'">Upload audio</button>
+    <button type="button" @click="mode='transcript'">Paste transcript</button>
+  </div>
+
+  <form x-show="mode==='upload'" hx-post="{% url 'start_job' %}"
+        hx-target="#job-{{ video.id }}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="source" value="upload">
+    <input type="hidden" name="youtube_video_id" value="{{ video.id }}">
+    <input type="hidden" name="title" value="{{ video.title }}">
+    <input type="file" name="media" accept="audio/*,video/*" required>
+    <button type="submit">Extract recipe</button>
+  </form>
+
+  <form x-show="mode==='transcript'" hx-post="{% url 'start_job' %}"
+        hx-target="#job-{{ video.id }}">
+    {% csrf_token %}
+    <input type="hidden" name="source" value="paste_transcript">
+    <input type="hidden" name="youtube_video_id" value="{{ video.id }}">
+    <input type="hidden" name="title" value="{{ video.title }}">
+    <textarea name="transcript" placeholder="Paste the transcript..." required></textarea>
+    <button type="submit">Extract recipe</button>
+  </form>
+
+  <div id="job-{{ video.id }}"></div>
+</div>

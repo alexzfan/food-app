@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Saved{% endblock %}
+{% block content %}
+<h1>Saved recipes</h1>
+<input type="search" name="q" value="{{ q }}" placeholder="Search saved..."
+       hx-get="{% url 'saved' %}" hx-target="#recipe-list" hx-select="#recipe-list"
+       hx-trigger="keyup changed delay:400ms">
+<div id="recipe-list">
+  {% for recipe in recipes %}{% include "recipes/_recipe_card.html" %}
+  {% empty %}<p>No recipes yet. Extract one from the Discover tab.</p>{% endfor %}
+</div>
+{% endblock %}

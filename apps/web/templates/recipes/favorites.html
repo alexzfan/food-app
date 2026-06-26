@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Favorites{% endblock %}
+{% block content %}
+<h1>Favorites</h1>
+<div id="recipe-list">
+  {% for recipe in recipes %}{% include "recipes/_recipe_card.html" %}
+  {% empty %}<p>No favorites yet.</p>{% endfor %}
+</div>
+{% endblock %}
