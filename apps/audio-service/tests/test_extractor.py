@@ -26,6 +26,22 @@ def test_parse_requires_title():
         parse_recipe_response('{"description": "x"}')
 
 
+def test_get_extractor_selects_backend(monkeypatch):
+    from app.extractor import (
+        HostedExtractor,
+        LlamaCppExtractor,
+        LocalGemmaExtractor,
+        get_extractor,
+    )
+
+    monkeypatch.setenv("EXTRACTOR_BACKEND", "llamacpp")
+    assert isinstance(get_extractor(), LlamaCppExtractor)
+    monkeypatch.setenv("EXTRACTOR_BACKEND", "hosted")
+    assert isinstance(get_extractor(), HostedExtractor)
+    monkeypatch.setenv("EXTRACTOR_BACKEND", "local")
+    assert isinstance(get_extractor(), LocalGemmaExtractor)
+
+
 def test_extract_endpoint_uses_extractor():
     fake = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
 

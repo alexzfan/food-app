@@ -62,6 +62,7 @@ services:
       EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       GEMMA_MODEL: ${GEMMA_MODEL:-gemma4:26b-a4b-it-qat}
+      LLAMACPP_URL: ${LLAMACPP_URL:-http://llamacpp:8080/v1/chat/completions}
       HOSTED_LLM_URL: ${HOSTED_LLM_URL:-}
       HOSTED_LLM_API_KEY: ${HOSTED_LLM_API_KEY:-}
       HOSTED_LLM_MODEL: ${HOSTED_LLM_MODEL:-}
@@ -70,6 +71,43 @@ services:
         condition: service_started
     ports:
       - "${ML_PORT:-8001}:8001"
+
+  # GPU path (opt-in): llama.cpp server running the 26B-A4B MoE with expert
+  # offload -- attention/shared weights on GPU, sparse experts in system RAM.
+  # Enable with: EXTRACTOR_BACKEND=llamacpp docker compose --profile gpu up
+  # Uses the unsloth GGUF directly (loads fine in llama.cpp; only Ollama's pull
+  # 400s on it). Needs the NVIDIA Container Toolkit.
+  llamacpp:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    profiles: ["gpu"]
+    restart: unless-stopped
+    environment:
+      LLAMA_CACHE: /cache
+    volumes:
+      - llamacpp-data:/cache
+    command:
+      - "-hf"
+      - "${LLAMACPP_HF_MODEL:-unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}"
+      - "-ngl"
+      - "99"
+      - "-ot"
+      - "exps=CPU"
+      - "-c"
+      - "${LLAMACPP_CTX:-8192}"
+      - "--jinja"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8080"
+    ports:
+      - "${LLAMACPP_PORT:-8080}:8080"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   web:
     build: ./apps/web
@@ -114,3 +152,4 @@ volumes:
   db-data:
   upload-data:
   ollama-data:
+  llamacpp-data:
