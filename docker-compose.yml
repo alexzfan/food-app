@@ -50,7 +50,7 @@ services:
     command:
       - |
         until ollama list >/dev/null 2>&1; do echo "waiting for ollama..."; sleep 2; done
-        ollama pull ${GEMMA_MODEL:-hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}
+        ollama pull ${GEMMA_MODEL:-gemma4:26b-a4b-it-qat}
     restart: "no"
 
   ml:
@@ -61,7 +61,7 @@ services:
       MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-900}
       EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
-      GEMMA_MODEL: ${GEMMA_MODEL:-hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}
+      GEMMA_MODEL: ${GEMMA_MODEL:-gemma4:26b-a4b-it-qat}
       HOSTED_LLM_URL: ${HOSTED_LLM_URL:-}
       HOSTED_LLM_API_KEY: ${HOSTED_LLM_API_KEY:-}
       HOSTED_LLM_MODEL: ${HOSTED_LLM_MODEL:-}
