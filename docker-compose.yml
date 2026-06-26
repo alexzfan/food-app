@@ -28,7 +28,7 @@ services:
       MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-900}
       EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
       OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
-      GEMMA_MODEL: ${GEMMA_MODEL:-gemma3n}
+      GEMMA_MODEL: ${GEMMA_MODEL:-hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}
       HOSTED_LLM_URL: ${HOSTED_LLM_URL:-}
       HOSTED_LLM_API_KEY: ${HOSTED_LLM_API_KEY:-}
       HOSTED_LLM_MODEL: ${HOSTED_LLM_MODEL:-}

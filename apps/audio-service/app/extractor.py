@@ -29,7 +29,9 @@ class LocalGemmaExtractor:
 
     def __init__(self):
         self.url = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-        self.model = os.environ.get("GEMMA_MODEL", "gemma3n")
+        self.model = os.environ.get(
+            "GEMMA_MODEL", "hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL"
+        )
 
     def extract(self, transcript: str, title: str | None) -> dict:
         prompt = build_prompt(transcript, title)
