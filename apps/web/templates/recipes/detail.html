@@ -11,8 +11,6 @@
 <ul>{% for i in recipe.ingredients %}<li>{{ i.amount }} {{ i.unit }} {{ i.name }}{% if i.notes %} ({{ i.notes }}){% endif %}</li>{% endfor %}</ul>
 <h2>Instructions</h2>
 <ol>{% for s in recipe.instructions %}<li>{{ s.text }}{% if s.duration %} — {{ s.duration }}{% endif %}</li>{% endfor %}</ol>
-<form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="this" hx-swap="outerHTML">
-  {% csrf_token %}<button type="submit">{% if is_favorite %}Unfavorite{% else %}Favorite{% endif %}</button>
-</form>
+{% include "recipes/_favorite_button.html" with recipe=recipe %}
 <form hx-post="{% url 'delete_recipe' recipe.id %}">{% csrf_token %}<button type="submit">Delete</button></form>
 {% endblock %}

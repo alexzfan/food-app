@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .extractor import get_extractor
-from .transcription import transcribe_file
+from .transcription import probe_duration, transcribe_file
 
 app = FastAPI(title="Recipe ML Service", version="2.0.0")
 app.add_middleware(
@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_BYTES", str(200 * 1024 * 1024)))
+MAX_DURATION_SECONDS = int(os.environ.get("MAX_DURATION_SECONDS", "900"))
 TEMP_DIR = Path(tempfile.gettempdir()) / "recipe-uploads"
 TEMP_DIR.mkdir(exist_ok=True)
 
@@ -36,6 +37,12 @@ async def transcribe(file: UploadFile = File(...)):
     tmp_path = TEMP_DIR / f"{os.urandom(8).hex()}{suffix}"
     try:
         tmp_path.write_bytes(data)
+        duration = probe_duration(str(tmp_path))
+        if duration > MAX_DURATION_SECONDS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Media too long ({int(duration)}s). Max: {MAX_DURATION_SECONDS}s",
+            )
         result = transcribe_file(str(tmp_path))
     finally:
         tmp_path.unlink(missing_ok=True)

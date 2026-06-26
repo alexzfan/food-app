@@ -25,6 +25,7 @@ services:
     restart: unless-stopped
     environment:
       WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
+      MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-900}
       EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
       OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
       GEMMA_MODEL: ${GEMMA_MODEL:-gemma3n}
@@ -45,6 +46,9 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-insecure-key-change-me}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+      UPLOAD_DIR: /uploads
+    volumes:
+      - upload-data:/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -61,6 +65,9 @@ services:
       DATABASE_URL: postgres://recipe:${POSTGRES_PASSWORD:-recipe}@db:5432/recipe
       REDIS_URL: redis://redis:6379/0
       ML_SERVICE_URL: http://ml:8001
+      UPLOAD_DIR: /uploads
+    volumes:
+      - upload-data:/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -69,3 +76,4 @@ services:
 
 volumes:
   db-data:
+  upload-data:

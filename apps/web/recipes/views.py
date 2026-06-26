@@ -1,6 +1,6 @@
-import tempfile
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
@@ -57,9 +57,12 @@ def start_job(request):
         run_extraction_job.delay(job.id, transcript=text)
     else:  # upload
         upload = request.FILES["media"]
-        tmp_dir = Path(tempfile.gettempdir()) / "recipe-web-uploads"
-        tmp_dir.mkdir(exist_ok=True)
-        tmp_path = tmp_dir / f"{job.id}_{upload.name}"
+        upload_dir = Path(settings.UPLOAD_DIR)
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        # Never trust the client filename: derive a safe name from job id + the
+        # extension only, so a crafted name like "../../x" can't escape the dir.
+        suffix = Path(upload.name).suffix
+        tmp_path = upload_dir / f"{job.id}{suffix}"
         with open(tmp_path, "wb") as f:
             for chunk in upload.chunks():
                 f.write(chunk)
@@ -109,8 +112,10 @@ def favorites(request):
 @login_required
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
-    is_fav = Favorite.objects.filter(user=request.user, recipe=recipe).exists()
-    return render(request, "recipes/detail.html", {"recipe": recipe, "is_favorite": is_fav})
+    recipe.is_favorite = Favorite.objects.filter(
+        user=request.user, recipe=recipe
+    ).exists()
+    return render(request, "recipes/detail.html", {"recipe": recipe})
 
 
 @login_required
@@ -121,7 +126,12 @@ def toggle_favorite(request, pk):
     if not created:
         fav.delete()
     recipe.is_favorite = created
-    return render(request, "recipes/_recipe_card.html", {"recipe": recipe})
+    # The detail page swaps just the button; list pages swap the whole card.
+    if request.POST.get("context") == "detail":
+        template = "recipes/_favorite_button.html"
+    else:
+        template = "recipes/_recipe_card.html"
+    return render(request, template, {"recipe": recipe})
 
 
 @login_required

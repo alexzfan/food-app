@@ -1,8 +1,40 @@
+import json
 import os
+import subprocess
 from typing import Optional
 
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "base")
 _model: Optional[object] = None
+
+
+def probe_duration(path: str) -> float:
+    """Return media duration in seconds via ffprobe.
+
+    Best-effort: returns 0.0 when ffprobe is missing or the file can't be
+    probed, so environments without ffmpeg (e.g. local test runs) don't reject
+    valid uploads. Real enforcement happens in the Docker image where ffmpeg
+    is installed.
+    """
+    try:
+        out = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
+                "-show_format",
+                path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if out.returncode != 0:
+            return 0.0
+        return float(json.loads(out.stdout)["format"]["duration"])
+    except Exception:
+        return 0.0
 
 
 def get_model():

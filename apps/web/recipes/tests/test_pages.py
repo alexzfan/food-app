@@ -51,6 +51,22 @@ def test_favorites_lists_only_favorited(auth_client, user):
     assert b"NotFav" not in resp.content
 
 
+def test_detail_favorite_returns_button_not_card(auth_client, user):
+    r = Recipe.objects.create(owner=user, title="Pasta")
+    resp = auth_client.post(f"/recipes/{r.id}/favorite/", {"context": "detail"})
+    assert Favorite.objects.filter(user=user, recipe=r).exists()
+    # detail context swaps the button (shows "Unfavorite"), not a list card link
+    assert b"Unfavorite" in resp.content
+    assert f'href="/recipes/{r.id}/"'.encode() not in resp.content
+
+
+def test_list_favorite_returns_card(auth_client, user):
+    r = Recipe.objects.create(owner=user, title="Pasta")
+    resp = auth_client.post(f"/recipes/{r.id}/favorite/")
+    # no context -> full card with the detail link
+    assert f'href="/recipes/{r.id}/"'.encode() in resp.content
+
+
 def test_delete_recipe(auth_client, user):
     r = Recipe.objects.create(owner=user, title="Gone")
     resp = auth_client.post(f"/recipes/{r.id}/delete/")

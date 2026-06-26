@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 
 import dj_database_url
@@ -8,7 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent.parent / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-key-change-me")
-DEBUG = os.environ.get("DJANGO_DEBUG", "true").lower() == "true"
+# Secure-by-default: DEBUG is off unless explicitly enabled (dev .env sets it on).
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS = [
@@ -25,6 +27,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -62,6 +65,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # External services
@@ -81,5 +91,11 @@ LOGOUT_REDIRECT_URL = "login"
 
 # Upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB
+
+# Directory where uploaded media is staged for the worker to read. Must point at
+# a path shared between the web and worker containers (see docker-compose volume).
+UPLOAD_DIR = os.environ.get(
+    "UPLOAD_DIR", str(Path(tempfile.gettempdir()) / "recipe-web-uploads")
+)
 
 AUTH_USER_MODEL = "accounts.User"

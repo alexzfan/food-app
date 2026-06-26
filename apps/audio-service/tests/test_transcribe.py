@@ -30,3 +30,15 @@ def test_transcribe_rejects_empty():
         "/transcribe", files={"file": ("a.wav", io.BytesIO(b""), "audio/wav")}
     )
     assert resp.status_code == 400
+
+
+def test_transcribe_rejects_too_long():
+    with patch("app.main.probe_duration", return_value=99999.0), \
+         patch("app.main.transcribe_file") as tr:
+        resp = client.post(
+            "/transcribe",
+            files={"file": ("a.wav", io.BytesIO(b"RIFFfakeaudio"), "audio/wav")},
+        )
+    assert resp.status_code == 400
+    assert "too long" in resp.json()["detail"]
+    tr.assert_not_called()

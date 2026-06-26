@@ -2,6 +2,7 @@
   <div>
     <button type="button" @click="mode='upload'">Upload audio</button>
     <button type="button" @click="mode='transcript'">Paste transcript</button>
+    <button type="button" @click="mode='text'">Paste recipe text</button>
   </div>
 
   <form x-show="mode==='upload'" hx-post="{% url 'start_job' %}"
@@ -21,6 +22,16 @@
     <input type="hidden" name="youtube_video_id" value="{{ video.id }}">
     <input type="hidden" name="title" value="{{ video.title }}">
     <textarea name="transcript" placeholder="Paste the transcript..." required></textarea>
+    <button type="submit">Extract recipe</button>
+  </form>
+
+  <form x-show="mode==='text'" hx-post="{% url 'start_job' %}"
+        hx-target="#job-{{ video.id }}">
+    {% csrf_token %}
+    <input type="hidden" name="source" value="paste_text">
+    <input type="hidden" name="youtube_video_id" value="{{ video.id }}">
+    <input type="hidden" name="title" value="{{ video.title }}">
+    <textarea name="text" placeholder="Paste recipe text..." required></textarea>
     <button type="submit">Extract recipe</button>
   </form>
 
