@@ -1,0 +1,8 @@
+<div class="recipe-card" id="recipe-{{ recipe.id }}">
+  <a href="{% url 'recipe_detail' recipe.id %}">{{ recipe.title }}</a>
+  <form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="#recipe-{{ recipe.id }}"
+        hx-swap="outerHTML">
+    {% csrf_token %}
+    <button type="submit">{% if recipe.is_favorite %}♥{% else %}♡{% endif %}</button>
+  </form>
+</div>

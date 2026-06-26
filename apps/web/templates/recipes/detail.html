@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.title }}{% endblock %}
+{% block content %}
+<h1>{{ recipe.title }}</h1>
+<p>{{ recipe.description }}</p>
+{% if recipe.youtube_video_id %}
+<iframe width="320" height="180" src="https://www.youtube.com/embed/{{ recipe.youtube_video_id }}"
+        frameborder="0" allowfullscreen></iframe>
+{% endif %}
+<h2>Ingredients</h2>
+<ul>{% for i in recipe.ingredients %}<li>{{ i.amount }} {{ i.unit }} {{ i.name }}{% if i.notes %} ({{ i.notes }}){% endif %}</li>{% endfor %}</ul>
+<h2>Instructions</h2>
+<ol>{% for s in recipe.instructions %}<li>{{ s.text }}{% if s.duration %} — {{ s.duration }}{% endif %}</li>{% endfor %}</ol>
+{% include "recipes/_favorite_button.html" with recipe=recipe %}
+<form hx-post="{% url 'delete_recipe' recipe.id %}">{% csrf_token %}<button type="submit">Delete</button></form>
+{% endblock %}

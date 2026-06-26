@@ -34,3 +34,5 @@ coverage/
 
 # Claude Code local settings
 .claude/
+.venv-web/
+.venv-ml/

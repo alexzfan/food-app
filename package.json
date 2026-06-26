@@ -2,15 +2,8 @@
   "name": "food-app",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "api": "npm run dev --workspace=apps/api",
-    "api:build": "npm run build --workspace=apps/api",
-    "mobile": "npm run start --workspace=apps/mobile",
-    "docker:start": "docker compose up -d --build",
+    "docker:start": "docker compose up --build",
     "docker:stop": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "docker:reset": "docker compose down -v && docker compose up -d --build"

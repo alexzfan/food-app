@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Discover{% endblock %}
+{% block content %}
+<h1>Discover recipes</h1>
+<input type="search" name="q" placeholder="Search YouTube for recipes..."
+       hx-get="{% url 'youtube_search' %}" hx-target="#results"
+       hx-trigger="keyup changed delay:500ms, search">
+<div id="results"></div>
+{% endblock %}
