@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "accounts",
     "core",
 ]
 
@@ -79,3 +80,5 @@ LOGOUT_REDIRECT_URL = "login"
 
 # Upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB
+
+AUTH_USER_MODEL = "accounts.User"
