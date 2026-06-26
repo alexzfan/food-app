@@ -20,6 +20,39 @@ services:
     image: redis:7
     restart: unless-stopped
 
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    # GPU is strongly recommended for a 26B model. If you have the NVIDIA
+    # Container Toolkit installed, uncomment to pass GPUs through:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # One-shot: waits for ollama, pulls the model, then exits. The model is
+  # cached in the ollama-data volume, so this is a no-op on later starts.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_started
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until ollama list >/dev/null 2>&1; do echo "waiting for ollama..."; sleep 2; done
+        ollama pull ${GEMMA_MODEL:-hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}
+    restart: "no"
+
   ml:
     build: ./apps/audio-service
     restart: unless-stopped
@@ -27,11 +60,14 @@ services:
       WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
       MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-900}
       EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
-      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       GEMMA_MODEL: ${GEMMA_MODEL:-hf.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF:Q4_K_XL}
       HOSTED_LLM_URL: ${HOSTED_LLM_URL:-}
       HOSTED_LLM_API_KEY: ${HOSTED_LLM_API_KEY:-}
       HOSTED_LLM_MODEL: ${HOSTED_LLM_MODEL:-}
+    depends_on:
+      ollama:
+        condition: service_started
     ports:
       - "${ML_PORT:-8001}:8001"
 
@@ -77,3 +113,4 @@ services:
 volumes:
   db-data:
   upload-data:
+  ollama-data:
