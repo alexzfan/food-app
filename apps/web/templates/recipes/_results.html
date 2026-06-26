@@ -1,0 +1,17 @@
+{% if error %}<p>{{ error }}</p>{% endif %}
+{% for v in videos %}
+<div class="video-card" x-data="{ open: false }">
+  <img src="{{ v.thumbnail_url }}" alt="" width="240">
+  <h3>{{ v.title }}</h3>
+  <p>{{ v.channel_title }}</p>
+  <button @click="open = !open">Use this video</button>
+  <div x-show="open">
+    <iframe width="320" height="180"
+            src="https://www.youtube.com/embed/{{ v.id }}"
+            frameborder="0" allowfullscreen></iframe>
+    {% include "recipes/_ingest_panel.html" with video=v %}
+  </div>
+</div>
+{% empty %}
+{% if query %}<p>No videos found.</p>{% endif %}
+{% endfor %}
