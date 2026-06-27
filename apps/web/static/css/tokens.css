@@ -1,0 +1,70 @@
+/* Mise design tokens — Ember / light (default). Values from the Mise design system. */
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* neutrals — warm clay */
+  --paper: #F3E9D8;   --surface: #FCF7EC;   --surface-2: #EADDC6;
+  --ink: #231C12;     --ink-2: #5A4F3D;     --muted: #948A74;
+  --line: #E4D6BD;    --line-2: #D4C19F;
+  --shadow-1: 0 1px 2px rgba(60,44,20,.05), 0 4px 14px rgba(60,44,20,.06);
+  --shadow-2: 0 2px 6px rgba(60,44,20,.08), 0 16px 44px rgba(60,44,20,.13);
+
+  /* accents — ember */
+  --accent: #E0613B;        --accent-press: #C44E2A;
+  --secondary: #E7A22F;     --secondary-press: #CC8A1E;
+  --on-accent: #FFF6EF;
+
+  /* derived */
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, var(--paper));
+  --accent-softer: color-mix(in srgb, var(--accent) 7%, var(--paper));
+  --accent-line: color-mix(in srgb, var(--accent) 30%, var(--line));
+  --on-soft: var(--accent-press);
+  --secondary-soft: color-mix(in srgb, var(--secondary) 16%, var(--paper));
+
+  /* radius + spacing (base 4) */
+  --r-sm: 8px;  --r-md: 12px;  --r-lg: 16px;  --r-xl: 18px;  --r-pill: 999px;
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px;
+
+  /* fonts */
+  --font-ui: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, monospace;
+}
+
+@keyframes mise-shimmer { 0% { background-position: -460px 0; } 100% { background-position: 460px 0; } }
+@keyframes mise-spin { to { transform: rotate(360deg); } }
+@keyframes mise-pulse { 0%,100% { opacity:.55; } 50% { opacity:1; } }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+a { color: var(--accent); text-decoration: none; }
+
+/* app shell */
+.app-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 16px 26px; border-bottom: 1px solid var(--line); background: var(--paper);
+}
+.app-bar__brand {
+  font-family: var(--font-display); font-weight: 560; font-size: 23px;
+  letter-spacing: -.01em; color: var(--ink);
+}
+.app-bar__nav { display: flex; align-items: center; gap: 20px; }
+.app-bar__nav a, .app-bar__nav button {
+  font-family: var(--font-ui); font-size: 14px; font-weight: 500; color: var(--ink-2);
+  background: none; border: none; cursor: pointer; padding: 0;
+}
+.app-bar__nav a:hover { color: var(--accent); }
+.app-main { max-width: 1080px; margin: 0 auto; padding: 26px; }
+.flash { list-style: none; margin: 0; padding: 12px 26px; }
+.flash li {
+  padding: 10px 14px; border-radius: var(--r-md); background: var(--accent-soft);
+  color: var(--on-soft); font-size: 14px; margin-bottom: 8px;
+}
