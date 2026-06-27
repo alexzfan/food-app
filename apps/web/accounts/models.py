@@ -10,6 +10,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
+    preferred_cuisines = models.JSONField(default=list, blank=True)
+    dietary_tags = models.JSONField(default=list, blank=True)
+    max_cook_time_minutes = models.PositiveIntegerField(null=True, blank=True)
+    onboarding_completed = models.BooleanField(default=False)
 
     objects = UserManager()
 

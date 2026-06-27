@@ -1,28 +1,37 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Recipe Finder{% endblock %}</title>
+  <title>{% block title %}Mise{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
-  <nav>
-    <a href="{% url 'discover' %}">Discover</a>
-    {% if user.is_authenticated %}
-      <a href="{% url 'saved' %}">Saved</a>
-      <a href="{% url 'favorites' %}">Favorites</a>
-      <a href="{% url 'profile' %}">Profile</a>
-      <form method="post" action="{% url 'logout' %}" style="display:inline">
-        {% csrf_token %}<button type="submit">Log out</button>
-      </form>
-    {% else %}
-      <a href="{% url 'login' %}">Log in</a>
-      <a href="{% url 'signup' %}">Sign up</a>
-    {% endif %}
+  <nav class="app-bar">
+    <a class="app-bar__brand" href="{% url 'discover' %}">Mise</a>
+    <div class="app-bar__nav">
+      <a href="{% url 'discover' %}">Discover</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'saved' %}">Saved</a>
+        <a href="{% url 'favorites' %}">Favorites</a>
+        <a href="{% url 'profile' %}">Profile</a>
+        <form method="post" action="{% url 'logout' %}" style="display:inline">
+          {% csrf_token %}<button type="submit">Log out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Log in</a>
+        <a href="{% url 'signup' %}">Sign up</a>
+      {% endif %}
+    </div>
   </nav>
-  {% if messages %}<ul>{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
-  <main>{% block content %}{% endblock %}</main>
+  {% if messages %}<ul class="flash">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+  <main class="app-main">{% block content %}{% endblock %}</main>
 </body>
 </html>

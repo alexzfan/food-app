@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Welcome to Mise{% endblock %}
+{% block content %}
+<section class="wizard">
+  {% include "accounts/_onboarding_progress.html" %}
+  <span class="wizard__eyebrow">Welcome</span>
+  <h1 class="wizard__headline">Good to meet you — what are we cooking?</h1>
+  <p class="wizard__lead">Tell us a little about your taste and we'll fill your feed with
+    food videos that already have a recipe waiting. Takes about 20 seconds.</p>
+  <div class="wizard__actions">
+    <a class="btn btn--primary" href="{% url 'onboarding_tastes' %}">Get started</a>
+    <form method="post" action="{% url 'onboarding_skip' %}">
+      {% csrf_token %}
+      <button class="btn btn--ghost" type="submit">Skip for now</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

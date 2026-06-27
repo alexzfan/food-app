@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -66,10 +67,21 @@ AUTH_PASSWORD_VALIDATORS = [
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Production serves hashed, compressed assets via WhiteNoise's manifest storage.
+# Tests render templates with {% static %} but never run collectstatic, so the
+# manifest does not exist — fall back to plain storage under pytest. Detecting via
+# sys.modules avoids any settings-import-ordering coupling with conftest/env vars.
+_TESTING = "pytest" in sys.modules
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if _TESTING
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
     },
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

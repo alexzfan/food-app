@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Your taste{% endblock %}
+{% block content %}
+<section class="wizard">
+  {% include "accounts/_onboarding_progress.html" %}
+  <h1 class="wizard__headline">What do you like to cook?</h1>
+  <form method="post" class="wizard__form">
+    {% csrf_token %}
+    <p class="wizard__group-label">Cuisines</p>
+    <div class="chip-grid">
+      {% for c in cuisine_options %}
+        <label class="chip">
+          <input type="checkbox" name="cuisines" value="{{ c }}" {% if c in selected_cuisines %}checked{% endif %}>
+          {{ c }}
+        </label>
+      {% endfor %}
+    </div>
+    <p class="wizard__group-label">Dietary preferences</p>
+    <div class="chip-grid">
+      {% for d in diet_options %}
+        <label class="chip">
+          <input type="checkbox" name="diets" value="{{ d }}" {% if d in selected_diets %}checked{% endif %}>
+          {{ d }}
+        </label>
+      {% endfor %}
+    </div>
+    <div class="wizard__actions">
+      <button class="btn btn--primary" type="submit">Continue</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -8,17 +8,21 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from accounts.views import onboarding_required
+
 from . import youtube
 from .models import ExtractionJob, Favorite, Recipe
 from .tasks import run_extraction_job
 
 
 @login_required
+@onboarding_required
 def discover(request):
     return render(request, "recipes/discover.html")
 
 
 @login_required
+@onboarding_required
 def youtube_search(request):
     query = request.GET.get("q", "").strip()
     videos = []
@@ -39,6 +43,7 @@ def youtube_search(request):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def start_job(request):
     source = request.POST.get("source", "upload")
@@ -72,6 +77,7 @@ def start_job(request):
 
 
 @login_required
+@onboarding_required
 def job_status(request, pk):
     job = get_object_or_404(ExtractionJob, pk=pk, owner=request.user)
     if job.status == ExtractionJob.Status.DONE and job.recipe_id:
@@ -92,6 +98,7 @@ def _annotated(qs, user):
 
 
 @login_required
+@onboarding_required
 def saved(request):
     q = request.GET.get("q", "").strip()
     recipes = _annotated(Recipe.objects.filter(owner=request.user), request.user)
@@ -101,6 +108,7 @@ def saved(request):
 
 
 @login_required
+@onboarding_required
 def favorites(request):
     recipes = _annotated(
         Recipe.objects.filter(owner=request.user, favorited_by__user=request.user),
@@ -110,6 +118,7 @@ def favorites(request):
 
 
 @login_required
+@onboarding_required
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     recipe.is_favorite = Favorite.objects.filter(
@@ -119,6 +128,7 @@ def recipe_detail(request, pk):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def toggle_favorite(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
@@ -135,6 +145,7 @@ def toggle_favorite(request, pk):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def delete_recipe(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)

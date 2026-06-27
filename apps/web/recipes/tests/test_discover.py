@@ -8,7 +8,7 @@ User = get_user_model()
 
 @pytest.fixture
 def auth_client(client, db):
-    User.objects.create_user(email="u@e.com", password="supersecret")
+    User.objects.create_user(email="u@e.com", password="supersecret", onboarding_completed=True)
     client.login(username="u@e.com", password="supersecret")
     return client
 
