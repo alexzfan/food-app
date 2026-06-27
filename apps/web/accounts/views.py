@@ -68,6 +68,8 @@ def onboarding_skip(request):
 
 @login_required
 def onboarding_tastes(request):
+    if request.user.onboarding_completed:
+        return redirect("discover")
     if request.method == "POST":
         chosen_cuisines = [c for c in request.POST.getlist("cuisines") if c in CUISINE_OPTIONS]
         chosen_diets = [d for d in request.POST.getlist("diets") if d in DIET_OPTIONS]
@@ -90,6 +92,8 @@ def onboarding_tastes(request):
 
 @login_required
 def onboarding_cook_time(request):
+    if request.user.onboarding_completed:
+        return redirect("discover")
     if request.method == "POST":
         valid = {str(m) for m, _ in COOK_TIME_OPTIONS}
         raw = request.POST.get("max_cook_time", "0")

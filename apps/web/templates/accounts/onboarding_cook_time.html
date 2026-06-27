@@ -9,7 +9,7 @@
     <div class="chip-grid">
       {% for minutes, label in cook_time_options %}
         <label class="chip">
-          <input type="radio" name="max_cook_time" value="{{ minutes }}" {% if forloop.first %}checked{% endif %}>
+          <input type="radio" name="max_cook_time" value="{{ minutes }}" {% if minutes == 0 %}checked{% endif %}>
           {{ label }}
         </label>
       {% endfor %}

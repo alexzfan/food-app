@@ -121,3 +121,16 @@ def test_cook_time_get_renders_options(auth_client):
     resp = auth_client.get("/onboarding/cook-time/")
     assert resp.status_code == 200
     assert b"Under 30 min" in resp.content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("path", ["/onboarding/tastes/", "/onboarding/cook-time/"])
+def test_completed_user_cannot_reenter_steps(auth_client, user, path):
+    user.onboarding_completed = True
+    user.save(update_fields=["onboarding_completed"])
+    resp = auth_client.post(path, {"cuisines": ["Italian"], "max_cook_time": "15"})
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/"
+    user.refresh_from_db()
+    # the guard runs before any save, so a completed user's prefs are untouched
+    assert user.preferred_cuisines == []
