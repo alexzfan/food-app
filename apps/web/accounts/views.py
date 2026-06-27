@@ -93,6 +93,7 @@ def onboarding_cook_time(request):
     if request.method == "POST":
         valid = {str(m) for m, _ in COOK_TIME_OPTIONS}
         raw = request.POST.get("max_cook_time", "0")
+        # Unknown/tampered value -> 0, which stores as None (same as the "Any" option).
         minutes = int(raw) if raw in valid else 0
         request.user.max_cook_time_minutes = minutes or None
         request.user.onboarding_completed = True

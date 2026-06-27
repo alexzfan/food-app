@@ -104,3 +104,20 @@ def test_cook_time_any_stores_null(auth_client, user):
     user.refresh_from_db()
     assert user.max_cook_time_minutes is None
     assert user.onboarding_completed is True
+
+
+@pytest.mark.django_db
+def test_tastes_get_renders_chips(auth_client):
+    # GET is the only path that renders the wizard template; guards against
+    # template syntax errors and a future accidental @require_POST.
+    resp = auth_client.get("/onboarding/tastes/")
+    assert resp.status_code == 200
+    assert b"Italian" in resp.content
+    assert b"Vegetarian" in resp.content
+
+
+@pytest.mark.django_db
+def test_cook_time_get_renders_options(auth_client):
+    resp = auth_client.get("/onboarding/cook-time/")
+    assert resp.status_code == 200
+    assert b"Under 30 min" in resp.content
