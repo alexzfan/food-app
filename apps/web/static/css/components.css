@@ -15,7 +15,8 @@
 .btn--ghost:hover { background: var(--accent-soft); }
 .btn:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; box-shadow: none; }
 .btn--icon {
-  width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%;
   background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); box-shadow: none;
 }
 .btn--icon:hover { background: var(--surface-2); }
