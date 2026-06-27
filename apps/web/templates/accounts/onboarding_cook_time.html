@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Cook time{% endblock %}
+{% block content %}
+<section class="wizard">
+  {% include "accounts/_onboarding_progress.html" %}
+  <h1 class="wizard__headline">How much time do you usually have?</h1>
+  <form method="post" class="wizard__form">
+    {% csrf_token %}
+    <div class="chip-grid">
+      {% for minutes, label in cook_time_options %}
+        <label class="chip">
+          <input type="radio" name="max_cook_time" value="{{ minutes }}" {% if forloop.first %}checked{% endif %}>
+          {{ label }}
+        </label>
+      {% endfor %}
+    </div>
+    <div class="wizard__actions">
+      <button class="btn btn--primary" type="submit">Finish</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

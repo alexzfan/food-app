@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from .constants import COOK_TIME_OPTIONS, CUISINE_OPTIONS, DIET_OPTIONS
 from .forms import SignupForm
 
 
@@ -63,3 +64,42 @@ def onboarding_skip(request):
     request.user.onboarding_completed = True
     request.user.save(update_fields=["onboarding_completed"])
     return redirect("discover")
+
+
+@login_required
+def onboarding_tastes(request):
+    if request.method == "POST":
+        chosen_cuisines = [c for c in request.POST.getlist("cuisines") if c in CUISINE_OPTIONS]
+        chosen_diets = [d for d in request.POST.getlist("diets") if d in DIET_OPTIONS]
+        request.user.preferred_cuisines = chosen_cuisines
+        request.user.dietary_tags = chosen_diets
+        request.user.save(update_fields=["preferred_cuisines", "dietary_tags"])
+        return redirect("onboarding_cook_time")
+    return render(
+        request,
+        "accounts/onboarding_tastes.html",
+        {
+            "cuisine_options": CUISINE_OPTIONS,
+            "diet_options": DIET_OPTIONS,
+            "selected_cuisines": request.user.preferred_cuisines,
+            "selected_diets": request.user.dietary_tags,
+            "step": 2,
+        },
+    )
+
+
+@login_required
+def onboarding_cook_time(request):
+    if request.method == "POST":
+        valid = {str(m) for m, _ in COOK_TIME_OPTIONS}
+        raw = request.POST.get("max_cook_time", "0")
+        minutes = int(raw) if raw in valid else 0
+        request.user.max_cook_time_minutes = minutes or None
+        request.user.onboarding_completed = True
+        request.user.save(update_fields=["max_cook_time_minutes", "onboarding_completed"])
+        return redirect("discover")
+    return render(
+        request,
+        "accounts/onboarding_cook_time.html",
+        {"cook_time_options": COOK_TIME_OPTIONS, "step": 3},
+    )

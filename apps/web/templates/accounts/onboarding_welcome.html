@@ -7,7 +7,7 @@
   <p class="wizard__lead">Tell us a little about your taste and we'll fill your feed with
     food videos that already have a recipe waiting. Takes about 20 seconds.</p>
   <div class="wizard__actions">
-    <a class="btn btn--primary" href="{% url 'onboarding' %}">Get started</a>
+    <a class="btn btn--primary" href="{% url 'onboarding_tastes' %}">Get started</a>
     <form method="post" action="{% url 'onboarding_skip' %}">
       {% csrf_token %}
       <button class="btn btn--ghost" type="submit">Skip for now</button>

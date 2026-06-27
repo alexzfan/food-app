@@ -65,3 +65,42 @@ def test_skip_completes_with_empty_prefs(auth_client, user):
     assert user.onboarding_completed is True
     assert user.preferred_cuisines == []
     assert user.dietary_tags == []
+
+
+@pytest.mark.django_db
+def test_tastes_saves_and_advances(auth_client, user):
+    resp = auth_client.post(
+        "/onboarding/tastes/",
+        {"cuisines": ["Italian", "Thai"], "diets": ["Vegetarian"]},
+    )
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/onboarding/cook-time/"
+    user.refresh_from_db()
+    assert user.preferred_cuisines == ["Italian", "Thai"]
+    assert user.dietary_tags == ["Vegetarian"]
+    assert user.onboarding_completed is False  # not done until cook-time step
+
+
+@pytest.mark.django_db
+def test_tastes_ignores_unknown_values(auth_client, user):
+    auth_client.post("/onboarding/tastes/", {"cuisines": ["Italian", "Klingon"]})
+    user.refresh_from_db()
+    assert user.preferred_cuisines == ["Italian"]
+
+
+@pytest.mark.django_db
+def test_cook_time_completes_onboarding(auth_client, user):
+    resp = auth_client.post("/onboarding/cook-time/", {"max_cook_time": "30"})
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/"
+    user.refresh_from_db()
+    assert user.max_cook_time_minutes == 30
+    assert user.onboarding_completed is True
+
+
+@pytest.mark.django_db
+def test_cook_time_any_stores_null(auth_client, user):
+    auth_client.post("/onboarding/cook-time/", {"max_cook_time": "0"})
+    user.refresh_from_db()
+    assert user.max_cook_time_minutes is None
+    assert user.onboarding_completed is True
