@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #FAF6EF; color: #211C16; font-family: 'Hanken Grotesk', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  ::selection { background: color-mix(in srgb, var(--accent) 26%, transparent); }
+  @keyframes mise-shimmer { 0% { background-position: -460px 0; } 100% { background-position: 460px 0; } }
+  @keyframes mise-spin { to { transform: rotate(360deg); } }
+  @keyframes mise-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+  :root {
+    /* neutrals — light, warm clay (Ember default) */
+    --paper: #F3E9D8;       --surface: #FCF7EC;     --surface-2: #EADDC6;
+    --ink: #231C12;         --ink-2: #5A4F3D;       --muted: #948A74;
+    --line: #E4D6BD;        --line-2: #D4C19F;
+    --shadow-1: 0 1px 2px rgba(60,44,20,.05), 0 4px 14px rgba(60,44,20,.06);
+    --shadow-2: 0 2px 6px rgba(60,44,20,.08), 0 16px 44px rgba(60,44,20,.13);
+    /* accents — ember (default) */
+    --accent: #E0613B;      --accent-press: #C44E2A;
+    --secondary: #E7A22F;   --secondary-press: #CC8A1E;
+    --on-accent: #FFF6EF;
+    /* derived (auto-adapt to mode + palette) */
+    --accent-soft: color-mix(in srgb, var(--accent) 13%, var(--paper));
+    --accent-softer: color-mix(in srgb, var(--accent) 7%, var(--paper));
+    --accent-line: color-mix(in srgb, var(--accent) 34%, var(--line));
+    --on-soft: color-mix(in srgb, var(--accent) 72%, var(--ink));
+    --secondary-soft: color-mix(in srgb, var(--secondary) 18%, var(--paper));
+  }
+  [data-mode="dark"] {
+    --paper: #16120D;       --surface: #1F1A14;     --surface-2: #2A241C;
+    --ink: #F4EEE3;         --ink-2: #C7BCAA;       --muted: #8E8271;
+    --line: #322B22;        --line-2: #463D31;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.42);
+    --shadow-2: 0 2px 8px rgba(0,0,0,.5), 0 20px 52px rgba(0,0,0,.6);
+  }
+  [data-palette="saffron"] { --accent:#DA4D2A; --accent-press:#BE3D1D; --secondary:#E7A33A; --secondary-press:#CE8A22; --on-accent:#FFF7F1; }
+  [data-palette="basil"]   { --accent:#3F7A4E; --accent-press:#316140; --secondary:#CB7A3E; --secondary-press:#AE6029; --on-accent:#F4FBF3; }
+  [data-palette="harissa"] { --accent:#B23A24; --accent-press:#942C19; --secondary:#D5853B; --secondary-press:#B96B2A; --on-accent:#FFF5EF; }
+  [data-palette="ember"]   { --accent:#E0613B; --accent-press:#C44E2A; --secondary:#E7A22F; --secondary-press:#CC8A1E; --on-accent:#FFF6EF; }
+  [data-palette="ember"][data-mode="light"] {
+    --paper:#F3E9D8;        --surface:#FCF7EC;      --surface-2:#EADDC6;
+    --ink:#231C12;          --ink-2:#5A4F3D;        --muted:#948A74;
+    --line:#E4D6BD;         --line-2:#D4C19F;
+  }
+</style>
+</helmet>
+
+<div data-mode="{{ mode }}" data-palette="{{ palette }}">
+  <div style="min-height:100vh; background-color:var(--paper); color:var(--ink);">
+
+  <!-- ===== TOP BAR ===== -->
+  <header style="position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:14px 28px; background:color-mix(in srgb, var(--paper) 86%, transparent); backdrop-filter:blur(14px); border-bottom:1px solid var(--line);">
+    <div style="display:flex; align-items:baseline; gap:12px;">
+      <span style="font-family:'Newsreader',serif; font-weight:560; font-size:26px; letter-spacing:-.01em; color:var(--ink);">Mise</span>
+      <span style="font-family:'Spline Sans Mono',monospace; font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); padding-bottom:2px;">Design System</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:18px;">
+      <div style="display:flex; align-items:center; gap:9px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-right:2px;">Palette</span>
+        <button onClick="{{ setSaffron }}" title="Saffron" style="position:relative; width:22px; height:22px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:#DA4D2A; cursor:pointer; padding:0;">
+          <sc-if value="{{ palSaffron }}" hint-placeholder-val="{{ false }}"><span style="position:absolute; inset:-4px; border:2px solid var(--ink); border-radius:50%;"></span></sc-if>
+        </button>
+        <button onClick="{{ setBasil }}" title="Basil" style="position:relative; width:22px; height:22px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:#3F7A4E; cursor:pointer; padding:0;">
+          <sc-if value="{{ palBasil }}" hint-placeholder-val="{{ false }}"><span style="position:absolute; inset:-4px; border:2px solid var(--ink); border-radius:50%;"></span></sc-if>
+        </button>
+        <button onClick="{{ setHarissa }}" title="Harissa" style="position:relative; width:22px; height:22px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:#B23A24; cursor:pointer; padding:0;">
+          <sc-if value="{{ palHarissa }}" hint-placeholder-val="{{ false }}"><span style="position:absolute; inset:-4px; border:2px solid var(--ink); border-radius:50%;"></span></sc-if>
+        </button>
+        <button onClick="{{ setEmber }}" title="Ember" style="position:relative; width:22px; height:22px; border-radius:50%; border:1px solid rgba(0,0,0,.12); background:linear-gradient(135deg, #E0613B 60%, #E7A22F 60%); cursor:pointer; padding:0;">
+          <sc-if value="{{ palEmber }}" hint-placeholder-val="{{ false }}"><span style="position:absolute; inset:-4px; border:2px solid var(--ink); border-radius:50%;"></span></sc-if>
+        </button>
+      </div>
+      <button onClick="{{ toggleMode }}" style="display:flex; align-items:center; gap:8px; padding:7px 13px; border-radius:999px; border:1px solid var(--line-2); background:var(--surface); color:var(--ink); font-family:'Hanken Grotesk',sans-serif; font-size:13px; font-weight:600; cursor:pointer;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.04em;">{{ modeLabel }}</span>
+      </button>
+    </div>
+  </header>
+
+  <div style="display:flex; max-width:1320px; margin:0 auto; align-items:flex-start;">
+    <!-- ===== SIDE NAV ===== -->
+    <nav style="position:sticky; top:62px; flex:0 0 212px; align-self:flex-start; padding:54px 22px 54px 28px; display:flex; flex-direction:column; gap:2px;">
+      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); padding:0 12px 10px;">Foundations</span>
+      <a href="#overview" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Overview</a>
+      <a href="#color" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Color</a>
+      <a href="#type" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Typography</a>
+      <a href="#layout" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Layout &amp; Space</a>
+      <a href="#elevation" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Elevation</a>
+      <a href="#icons" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Iconography</a>
+      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); padding:18px 12px 10px;">Library</span>
+      <a href="#components" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Components</a>
+      <a href="#screens" style="display:block; padding:7px 12px; border-radius:8px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500;">Screens</a>
+    </nav>
+
+    <!-- ===== MAIN ===== -->
+    <main style="flex:1 1 auto; min-width:0; padding:0 40px 120px;">
+
+      <!-- OVERVIEW -->
+      <section id="overview" style="scroll-margin-top:80px; padding:60px 0 30px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Design System · v1 · Web</span>
+        <h1 style="font-family:'Newsreader',serif; font-weight:400; font-size:92px; line-height:.92; letter-spacing:-.02em; margin:22px 0 0; color:var(--ink);">From reel<br><span style="font-style:italic; color:var(--accent);">to recipe.</span></h1>
+        <p style="max-width:560px; margin:30px 0 0; font-size:18px; line-height:1.6; color:var(--ink-2);">Mise turns the food videos people already love on YouTube into clean, cookable recipes. This system gives that experience an editorial, appetite-first voice — warm paper, confident serifs, and structure you can cook from with flour on your hands.</p>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:46px;">
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; box-shadow:var(--shadow-1);">
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--accent);">01</span>
+            <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:23px; margin:10px 0 8px; color:var(--ink);">Appetite first</h3>
+            <p style="margin:0; font-size:14.5px; line-height:1.55; color:var(--ink-2);">Imagery leads. Warm tones, generous thumbnails, food before chrome.</p>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; box-shadow:var(--shadow-1);">
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--accent);">02</span>
+            <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:23px; margin:10px 0 8px; color:var(--ink);">Credit the source</h3>
+            <p style="margin:0; font-size:14.5px; line-height:1.55; color:var(--ink-2);">Every recipe traces back to its creator and original video. Always.</p>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; box-shadow:var(--shadow-1);">
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--accent);">03</span>
+            <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:23px; margin:10px 0 8px; color:var(--ink);">Cook, don't scroll</h3>
+            <p style="margin:0; font-size:14.5px; line-height:1.55; color:var(--ink-2);">Structured, scannable, hands-free friendly. Built for the kitchen.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLOR -->
+      <section id="color" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Foundations</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Color</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">A warm, paper-toned neutral base with one appetite-driving accent. Three accent palettes ship with the system — try them from the top bar. Every palette is built for both light and dark.</p>
+
+        <!-- accent / secondary -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+          <div style="border-radius:18px; overflow:hidden; border:1px solid var(--line); box-shadow:var(--shadow-1);">
+            <div style="height:128px; background:var(--accent); display:flex; align-items:flex-end; padding:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--on-accent); opacity:.9;">--accent</span>
+            </div>
+            <div style="display:flex; background:var(--surface);">
+              <div style="flex:1; height:46px; background:var(--accent-press);"></div>
+              <div style="flex:1; height:46px; background:var(--accent-line);"></div>
+              <div style="flex:1; height:46px; background:var(--accent-soft);"></div>
+              <div style="flex:1; height:46px; background:var(--accent-softer);"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:12px 16px; background:var(--surface);">
+              <span style="font-size:13px; color:var(--ink); font-weight:600;">Accent</span>
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">press · line · soft · softer</span>
+            </div>
+          </div>
+          <div style="border-radius:18px; overflow:hidden; border:1px solid var(--line); box-shadow:var(--shadow-1);">
+            <div style="height:128px; background:var(--secondary); display:flex; align-items:flex-end; padding:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:#3a2a12; opacity:.85;">--secondary</span>
+            </div>
+            <div style="display:flex; background:var(--surface);">
+              <div style="flex:1; height:46px; background:var(--secondary-press);"></div>
+              <div style="flex:1; height:46px; background:var(--secondary-soft);"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:12px 16px; background:var(--surface);">
+              <span style="font-size:13px; color:var(--ink); font-weight:600;">Secondary</span>
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">saffron · used sparingly</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- neutrals -->
+        <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:36px;">
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--paper);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Paper</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--paper</div></div>
+          </div>
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--surface);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Surface</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--surface</div></div>
+          </div>
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--surface-2);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Surface 2</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--surface-2</div></div>
+          </div>
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--ink-2);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Ink 2</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--ink-2</div></div>
+          </div>
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--ink);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Ink</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--ink</div></div>
+          </div>
+          <div style="border-radius:13px; overflow:hidden; border:1px solid var(--line);">
+            <div style="height:78px; background:var(--line-2);"></div>
+            <div style="padding:9px 11px; background:var(--surface);"><div style="font-size:12px; color:var(--ink); font-weight:600;">Line</div><div style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted);">--line-2</div></div>
+          </div>
+        </div>
+
+        <!-- palette explorer -->
+        <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:22px; margin:0 0 4px; color:var(--ink);">Four palettes, one system</h3>
+        <p style="margin:0 0 18px; font-size:14.5px; color:var(--muted);">Same warm neutrals, swappable accent. Click to preview the whole system.</p>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+          <button onClick="{{ setSaffron }}" style="text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow-1);" style-hover="border-color:var(--line-2);">
+            <div style="display:flex; gap:7px; margin-bottom:14px;">
+              <span style="width:34px; height:34px; border-radius:9px; background:#DA4D2A;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#E7A33A;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#FAF6EF; border:1px solid var(--line-2);"></span>
+            </div>
+            <div style="font-family:'Newsreader',serif; font-size:19px; color:var(--ink);">Saffron</div>
+            <div style="font-size:13px; color:var(--ink-2);">Tomato &amp; gold — the default. Energetic, hungry, classic.</div>
+          </button>
+          <button onClick="{{ setBasil }}" style="text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow-1);" style-hover="border-color:var(--line-2);">
+            <div style="display:flex; gap:7px; margin-bottom:14px;">
+              <span style="width:34px; height:34px; border-radius:9px; background:#3F7A4E;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#CB7A3E;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#FAF6EF; border:1px solid var(--line-2);"></span>
+            </div>
+            <div style="font-family:'Newsreader',serif; font-size:19px; color:var(--ink);">Basil</div>
+            <div style="font-size:13px; color:var(--ink-2);">Herb green &amp; terracotta. Fresh, wholesome, garden-grown.</div>
+          </button>
+          <button onClick="{{ setHarissa }}" style="text-align:left; cursor:pointer; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow-1);" style-hover="border-color:var(--line-2);">
+            <div style="display:flex; gap:7px; margin-bottom:14px;">
+              <span style="width:34px; height:34px; border-radius:9px; background:#B23A24;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#D5853B;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#FAF6EF; border:1px solid var(--line-2);"></span>
+            </div>
+            <div style="font-family:'Newsreader',serif; font-size:19px; color:var(--ink);">Harissa</div>
+            <div style="font-size:13px; color:var(--ink-2);">Smoked brick &amp; paprika. Deep, spiced, a little dramatic.</div>
+          </button>
+          <button onClick="{{ setEmber }}" style="position:relative; text-align:left; cursor:pointer; background:var(--surface); border:1.5px solid var(--accent-line); border-radius:16px; padding:18px; box-shadow:var(--shadow-1);" style-hover="border-color:var(--accent);">
+            <span style="position:absolute; top:13px; right:13px; font-family:'Spline Sans Mono',monospace; font-size:9px; letter-spacing:.08em; color:var(--on-soft); background:var(--accent-soft); border-radius:999px; padding:3px 8px;">SAFFRON+</span>
+            <div style="display:flex; gap:7px; margin-bottom:14px;">
+              <span style="width:34px; height:34px; border-radius:9px; background:#E0613B;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#E7A22F;"></span>
+              <span style="width:34px; height:34px; border-radius:9px; background:#F3E9D8; border:1px solid var(--line-2);"></span>
+            </div>
+            <div style="font-family:'Newsreader',serif; font-size:19px; color:var(--ink);">Ember</div>
+            <div style="font-size:13px; color:var(--ink-2);">Persimmon &amp; gold on warm clay. Saffron, tuned to feel like Mise.</div>
+          </button>
+        </div>
+      </section>
+      <!-- TYPOGRAPHY -->
+      <section id="type" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Foundations</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Typography</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">A magazine pairing. <strong style="color:var(--ink); font-weight:600;">Newsreader</strong> brings editorial warmth to recipe titles and headlines; <strong style="color:var(--ink); font-weight:600;">Hanken Grotesk</strong> keeps body and UI calm and legible; <strong style="color:var(--ink); font-weight:600;">Spline Sans Mono</strong> handles the technical voice — times, quantities, metadata, provenance.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:30px;">
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow-1);">
+            <div style="font-family:'Newsreader',serif; font-size:58px; line-height:1; color:var(--ink); margin-bottom:14px;">Ag</div>
+            <div style="font-family:'Newsreader',serif; font-size:17px; color:var(--ink); font-weight:600;">Newsreader</div>
+            <div style="font-size:13px; color:var(--ink-2); margin-top:3px;">Display &amp; headlines · serif</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:10px;">300 · 400 · 500 · italic</div>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow-1);">
+            <div style="font-family:'Hanken Grotesk',sans-serif; font-size:58px; line-height:1; color:var(--ink); margin-bottom:14px; font-weight:600;">Ag</div>
+            <div style="font-family:'Hanken Grotesk',sans-serif; font-size:17px; color:var(--ink); font-weight:600;">Hanken Grotesk</div>
+            <div style="font-size:13px; color:var(--ink-2); margin-top:3px;">Body &amp; interface · sans</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:10px;">400 · 500 · 600 · 700</div>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow-1);">
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:52px; line-height:1; color:var(--ink); margin-bottom:18px;">Ag</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:16px; color:var(--ink); font-weight:500;">Spline Sans Mono</div>
+            <div style="font-size:13px; color:var(--ink-2); margin-top:3px;">Metadata &amp; numerals · mono</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:10px;">400 · 500 · 600</div>
+          </div>
+        </div>
+
+        <!-- scale -->
+        <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-1);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding:22px 26px; border-bottom:1px solid var(--line);">
+            <span style="font-family:'Newsreader',serif; font-weight:400; font-size:52px; line-height:1; letter-spacing:-.015em; color:var(--ink); white-space:nowrap;">Weeknight ragù</span>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;">Display / 52 · Newsreader 400</span>
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding:20px 26px; border-bottom:1px solid var(--line);">
+            <span style="font-family:'Newsreader',serif; font-weight:500; font-size:32px; line-height:1.1; color:var(--ink);">For the soffritto</span>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;">Title / 32 · Newsreader 500</span>
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding:20px 26px; border-bottom:1px solid var(--line);">
+            <span style="font-family:'Hanken Grotesk',sans-serif; font-weight:700; font-size:20px; color:var(--ink);">Ingredients</span>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;">Heading / 20 · Hanken 700</span>
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px; padding:20px 26px; border-bottom:1px solid var(--line);">
+            <span style="font-family:'Hanken Grotesk',sans-serif; font-weight:400; font-size:16px; line-height:1.6; color:var(--ink-2); max-width:520px;">Sweat the onion, carrot and celery low and slow until everything collapses into something sweet and jammy — this is where the flavour is built.</span>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;">Body / 16 · Hanken 400</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; padding:20px 26px;">
+            <span style="font-family:'Spline Sans Mono',monospace; font-weight:500; font-size:13px; letter-spacing:.04em; color:var(--accent);">45 MIN · SERVES 4 · ITALIAN</span>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;">Meta / 13 · Spline Mono 500</span>
+          </div>
+        </div>
+      </section>
+      <!-- LAYOUT & SPACE -->
+      <section id="layout" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Foundations</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Layout &amp; space</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">A 4-point spacing rhythm and a soft, friendly radius scale. Generous breathing room — this is a magazine, not a dashboard.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          <!-- spacing -->
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:24px; box-shadow:var(--shadow-1);">
+            <h3 style="font-family:'Hanken Grotesk',sans-serif; font-weight:700; font-size:15px; margin:0 0 18px; color:var(--ink);">Spacing · base 4</h3>
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:4px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">4 · xs</span></div>
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:8px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">8 · sm</span></div>
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:16px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">16 · md</span></div>
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:24px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">24 · lg</span></div>
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:40px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">40 · xl</span></div>
+              <div style="display:flex; align-items:center; gap:14px;"><span style="height:14px; width:64px; background:var(--accent); border-radius:2px;"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted); width:54px;">64 · 2xl</span></div>
+            </div>
+          </div>
+          <!-- radius -->
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:24px; box-shadow:var(--shadow-1);">
+            <h3 style="font-family:'Hanken Grotesk',sans-serif; font-weight:700; font-size:15px; margin:0 0 18px; color:var(--ink);">Radius</h3>
+            <div style="display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap;">
+              <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:8px;"></div><div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:7px;">8 · sm</div></div>
+              <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:14px;"></div><div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:7px;">14 · md</div></div>
+              <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:18px;"></div><div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:7px;">18 · lg</div></div>
+              <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--accent-soft); border:1px solid var(--accent-line); border-radius:999px;"></div><div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:7px;">full · pill</div></div>
+            </div>
+            <p style="margin:22px 0 0; font-size:13.5px; line-height:1.55; color:var(--ink-2);">Cards use <strong style="color:var(--ink); font-weight:600;">14–18px</strong>. Chips, tags and buttons use <strong style="color:var(--ink); font-weight:600;">pill</strong>. Thumbnails use <strong style="color:var(--ink); font-weight:600;">14px</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ELEVATION -->
+      <section id="elevation" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Foundations</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Elevation</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">Soft, warm-tinted shadows — never gray. Two levels only: resting cards and lifted overlays.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:30px; box-shadow:var(--shadow-1);">
+            <div style="font-family:'Newsreader',serif; font-size:21px; color:var(--ink);">Card</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:4px;">--shadow-1 · resting</div>
+            <p style="margin:12px 0 0; font-size:13.5px; color:var(--ink-2);">Recipe cards, video tiles, panels. Sits gently on the paper.</p>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:30px; box-shadow:var(--shadow-2);">
+            <div style="font-family:'Newsreader',serif; font-size:21px; color:var(--ink);">Overlay</div>
+            <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); margin-top:4px;">--shadow-2 · lifted</div>
+            <p style="margin:12px 0 0; font-size:13.5px; color:var(--ink-2);">Menus, dialogs, the floating cook-mode bar, hover lift.</p>
+          </div>
+        </div>
+      </section>
+      <!--FILL:elevation-->
+      <!-- ICONOGRAPHY -->
+      <section id="icons" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Foundations</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Iconography</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">A single line set — <strong style="color:var(--ink); font-weight:600;">Lucide</strong>, 1.75px stroke, rounded caps. Friendly but precise. Icons carry meaning; they never decorate. <span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--muted);">currentColor</span> always.</p>
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px;">
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">search</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">filters</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">play</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">clock</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">servings</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">heat</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">save</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">extract&nbsp;AI</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">utensils</span>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:var(--shadow-1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">chevron</span>
+          </div>
+        </div>
+      </section>
+      <!-- COMPONENTS -->
+      <section id="components" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Library</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Components</h2>
+        <p style="max-width:560px; margin:0 0 38px; font-size:16px; line-height:1.6; color:var(--ink-2);">The building blocks of Mise — from buttons to the video-to-recipe primitives that make this product what it is.</p>
+
+        <!-- BUTTONS -->
+        <div style="margin-bottom:16px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);">Buttons &amp; actions</span></div>
+        <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:28px; box-shadow:var(--shadow-1); margin-bottom:34px;">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; gap:14px;">
+            <button style="display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-1);" style-hover="background:var(--accent-press);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+              Get the recipe
+            </button>
+            <button style="display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer;" style-hover="background:var(--surface-2);">Secondary</button>
+            <button style="display:inline-flex; align-items:center; gap:8px; padding:12px 16px; border:none; border-radius:999px; background:transparent; color:var(--accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer;" style-hover="background:var(--accent-soft);">Ghost</button>
+            <button disabled="true" style="display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border:none; border-radius:999px; background:var(--surface-2); color:var(--muted); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:not-allowed;">Disabled</button>
+            <span style="width:1px; height:34px; background:var(--line);"></span>
+            <button title="Save" style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); color:var(--ink); cursor:pointer;" style-hover="background:var(--surface-2);">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <button onClick="{{ toggleDemo }}" title="Save toggle (try me)" style="display:inline-flex; align-items:center; gap:9px; padding:11px 18px; border:1px solid var(--accent-line); border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600; cursor:pointer;">
+              <sc-if value="{{ savedDemo }}" hint-placeholder-val="{{ false }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+              <sc-if value="{{ notSavedDemo }}" hint-placeholder-val="{{ true }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+              <span>{{ savedDemoLabel }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CHIPS / TAGS / BADGES -->
+        <div style="margin-bottom:16px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);">Chips, tags &amp; badges</span></div>
+        <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:28px; box-shadow:var(--shadow-1); margin-bottom:34px; display:flex; flex-direction:column; gap:22px;">
+          <div>
+            <div style="font-size:13px; color:var(--ink-2); margin-bottom:11px;">Filter chips — cuisine &amp; diet (selectable)</div>
+            <div style="display:flex; flex-wrap:wrap; gap:9px;">
+              <span style="display:inline-flex; align-items:center; padding:8px 15px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:13.5px; font-weight:600;">Italian</span>
+              <span style="display:inline-flex; align-items:center; padding:8px 15px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-size:13.5px; font-weight:500;">Mexican</span>
+              <span style="display:inline-flex; align-items:center; padding:8px 15px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-size:13.5px; font-weight:500;">Thai</span>
+              <span style="display:inline-flex; align-items:center; padding:8px 15px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-size:13.5px; font-weight:500;">Vegetarian</span>
+              <span style="display:inline-flex; align-items:center; padding:8px 15px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-size:13.5px; font-weight:500;">Under 30 min</span>
+            </div>
+          </div>
+          <div style="height:1px; background:var(--line);"></div>
+          <div>
+            <div style="font-size:13px; color:var(--ink-2); margin-bottom:11px;">Status badges &amp; provenance</div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+              <span style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:11.5px; font-weight:500; letter-spacing:.02em;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+                AI EXTRACTED
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2); font-size:12.5px; font-weight:600;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1h0s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"/></svg>
+                via YouTube
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-family:'Spline Sans Mono',monospace; font-size:12px; font-weight:500;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                EASY
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-family:'Spline Sans Mono',monospace; font-size:12px; font-weight:500;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                35 MIN
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- INPUTS -->
+        <div style="margin-bottom:16px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);">Inputs &amp; search</span></div>
+        <div style="background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:28px; box-shadow:var(--shadow-1); margin-bottom:34px; display:grid; grid-template-columns:1.4fr 1fr; gap:18px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:11px; padding:14px 18px; border:1px solid var(--line-2); border-radius:999px; background:var(--paper);">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span style="font-size:15.5px; color:var(--ink); flex:1;">crispy chili oil noodles</span>
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 7px;">⏎</span>
+            </div>
+            <div style="margin-top:14px; display:flex; align-items:center; gap:11px; padding:13px 16px; border:1px solid var(--line); border-radius:12px; background:var(--paper);">
+              <span style="font-size:15px; color:var(--muted); flex:1;">Paste a YouTube link to extract…</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border:1px solid var(--line); border-radius:12px; background:var(--paper);">
+              <span style="font-size:14.5px; color:var(--ink);">Any cuisine</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div style="display:flex; align-items:center; gap:11px; padding:6px 4px;">
+              <span style="position:relative; width:42px; height:24px; border-radius:999px; background:var(--accent);"><span style="position:absolute; top:2px; left:20px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3);"></span></span>
+              <span style="font-size:14px; color:var(--ink);">Only show extractable</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DOMAIN: VIDEO CARD + RECIPE PRIMITIVES -->
+        <div style="margin-bottom:16px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);">Signature · video → recipe</span></div>
+        <div style="display:grid; grid-template-columns:320px 1fr; gap:18px; margin-bottom:18px;">
+          <!-- VIDEO CARD -->
+          <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:var(--shadow-1);">
+            <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 22px); display:flex; align-items:center; justify-content:center;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.1em;">VIDEO THUMBNAIL</span>
+              <span style="position:absolute; right:9px; bottom:9px; padding:3px 8px; border-radius:6px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:11px;">8:42</span>
+              <span style="position:absolute; left:9px; top:9px; display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:10.5px; font-weight:600;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+                RECIPE READY
+              </span>
+            </div>
+            <div style="padding:15px 16px 17px;">
+              <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:21px; line-height:1.15; margin:0 0 7px; color:var(--ink);">15-Minute Garlic Butter Noodles</h4>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <span style="width:22px; height:22px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span>
+                <span style="font-size:13px; color:var(--ink-2);">Lan's Kitchen</span>
+                <span style="width:3px; height:3px; border-radius:50%; background:var(--muted);"></span>
+                <span style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted);">1.2M views</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; gap:6px;">
+                  <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:3px 8px;">15 MIN</span>
+                  <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:3px 8px;">EASY</span>
+                </div>
+                <button onClick="{{ toggleDemo }}" style="display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); cursor:pointer;">
+                  <sc-if value="{{ savedDemo }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                  <sc-if value="{{ notSavedDemo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- recipe primitives -->
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            <!-- ingredient rows -->
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px; box-shadow:var(--shadow-1);">
+              <div style="font-size:13px; color:var(--muted); margin-bottom:14px; font-family:'Spline Sans Mono',monospace; letter-spacing:.04em;">INGREDIENT ROW</div>
+              <div style="display:flex; align-items:center; gap:13px; padding:9px 0; border-bottom:1px solid var(--line);">
+                <span style="width:21px; height:21px; border-radius:6px; border:1.5px solid var(--accent); background:var(--accent); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                <span style="font-family:'Spline Sans Mono',monospace; font-size:13.5px; color:var(--accent); font-weight:600; width:70px;">200 g</span>
+                <span style="font-size:15.5px; color:var(--ink); text-decoration:line-through; opacity:.55;">dried spaghetti</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:13px; padding:9px 0; border-bottom:1px solid var(--line);">
+                <span style="width:21px; height:21px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span>
+                <span style="font-family:'Spline Sans Mono',monospace; font-size:13.5px; color:var(--accent); font-weight:600; width:70px;">4 cloves</span>
+                <span style="font-size:15.5px; color:var(--ink);">garlic, thinly sliced</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:13px; padding:9px 0;">
+                <span style="width:21px; height:21px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span>
+                <span style="font-family:'Spline Sans Mono',monospace; font-size:13.5px; color:var(--accent); font-weight:600; width:70px;">3 tbsp</span>
+                <span style="font-size:15.5px; color:var(--ink);">unsalted butter</span>
+              </div>
+            </div>
+            <!-- step item -->
+            <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 22px; box-shadow:var(--shadow-1);">
+              <div style="font-size:13px; color:var(--muted); margin-bottom:14px; font-family:'Spline Sans Mono',monospace; letter-spacing:.04em;">STEP · LINKED TO VIDEO</div>
+              <div style="display:flex; gap:16px;">
+                <span style="flex:0 0 auto; width:30px; height:30px; border-radius:50%; background:var(--accent-soft); color:var(--on-soft); display:flex; align-items:center; justify-content:center; font-family:'Newsreader',serif; font-size:16px; font-weight:600;">2</span>
+                <div>
+                  <p style="margin:0 0 10px; font-size:15.5px; line-height:1.55; color:var(--ink);">Melt the butter over medium heat until it foams, then add the garlic and cook until just golden — don't let it brown.</p>
+                  <button style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border:1px solid var(--accent-line); border-radius:999px; background:transparent; color:var(--accent); font-family:'Spline Sans Mono',monospace; font-size:11.5px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent-soft);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                    JUMP TO 2:14
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- extraction state -->
+        <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 24px; box-shadow:var(--shadow-1); display:flex; align-items:center; gap:18px;">
+          <span style="flex:0 0 auto; width:46px; height:46px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="animation:mise-pulse 1.6s ease-in-out infinite;"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+          </span>
+          <div style="flex:1;">
+            <div style="font-family:'Newsreader',serif; font-size:18px; color:var(--ink); margin-bottom:9px;">Reading the video &amp; writing your recipe…</div>
+            <div style="height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden;">
+              <div style="height:100%; width:62%; border-radius:999px; background:linear-gradient(90deg, var(--secondary), var(--accent)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></div>
+            </div>
+          </div>
+          <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--muted);">Extracting state</span>
+        </div>
+      </section>
+      <!-- SCREENS -->
+      <section id="screens" style="scroll-margin-top:80px; padding:64px 0 30px; border-top:1px solid var(--line); margin-top:54px;">
+        <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent);">Library</span>
+        <h2 style="font-family:'Newsreader',serif; font-weight:500; font-size:46px; line-height:1.04; letter-spacing:-.01em; margin:14px 0 12px; color:var(--ink);">Screens</h2>
+        <p style="max-width:560px; margin:0 0 44px; font-size:16px; line-height:1.6; color:var(--ink-2);">The system, assembled. Six core surfaces of the Mise web app — themed live with everything above. Switch palette or mode from the top bar to see them adapt.</p>
+        <div style="display:flex; flex-direction:column; gap:54px;">
+          <!-- 01 DISCOVERY FEED -->
+          <div data-screen-label="Discovery feed">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">01</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Discovery feed</span>
+              <span style="font-size:13.5px; color:var(--muted);">Browse food videos that already have a recipe waiting.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/discover</span>
+              </div>
+              <div style="background:var(--paper);">
+                <!-- app bar -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:20px; padding:16px 26px; border-bottom:1px solid var(--line);">
+                  <span style="font-family:'Newsreader',serif; font-weight:560; font-size:23px; letter-spacing:-.01em; color:var(--ink);">Mise</span>
+                  <div style="flex:1; max-width:420px; display:flex; align-items:center; gap:10px; padding:9px 16px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface);">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <span style="font-size:14px; color:var(--muted);">Search recipes, creators, ingredients…</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:20px;">
+                    <span style="font-size:14px; font-weight:600; color:var(--accent);">Discover</span>
+                    <span style="font-size:14px; font-weight:500; color:var(--ink-2);">Saved</span>
+                    <span style="width:32px; height:32px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span>
+                  </div>
+                </div>
+                <!-- paste hero -->
+                <div style="padding:26px 26px 22px;">
+                  <h3 style="font-family:'Newsreader',serif; font-weight:400; font-size:30px; line-height:1.1; margin:0 0 16px; color:var(--ink);">Good evening — what are we cooking?</h3>
+                  <div style="display:flex; align-items:center; gap:12px; max-width:620px; padding:7px 7px 7px 18px; border:1px solid var(--accent-line); border-radius:999px; background:var(--surface); box-shadow:var(--shadow-1);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1h0s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"/></svg>
+                    <span style="flex:1; font-size:15px; color:var(--muted);">Paste a YouTube link to turn it into a recipe…</span>
+                    <button style="display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600; cursor:pointer;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+                      Extract
+                    </button>
+                  </div>
+                </div>
+                <!-- filter chips -->
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; padding:4px 26px 20px; border-bottom:1px solid var(--line);">
+                  <div style="display:flex; flex-wrap:wrap; gap:9px;">
+                    <span style="padding:7px 14px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:13px; font-weight:600;">For you</span>
+                    <span style="padding:7px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:13px; font-weight:500;">Under 30 min</span>
+                    <span style="padding:7px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:13px; font-weight:500;">Vegetarian</span>
+                    <span style="padding:7px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:13px; font-weight:500;">One pot</span>
+                    <span style="padding:7px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:13px; font-weight:500;">Italian</span>
+                  </div>
+                  <span style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); white-space:nowrap;">Trending ▾</span>
+                </div>
+                <!-- grid -->
+                <div style="padding:24px 26px 30px; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+<!-- card 1 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 12px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">8:42</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">15-Minute Garlic Butter Noodles</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">Lan's Kitchen</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">15 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">EASY</span></div>
+                        <button onClick="{{ toggleR1 }}" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); cursor:pointer;">
+                          <sc-if value="{{ savedR1 }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                          <sc-if value="{{ notSavedR1 }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- card 2 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 12px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">12:08</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Crispy Chili Oil Dumplings</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">Mei Cooks</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">35 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">MEDIUM</span></div>
+                        <button onClick="{{ toggleR2 }}" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); cursor:pointer;">
+                          <sc-if value="{{ savedR2 }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                          <sc-if value="{{ notSavedR2 }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- card 3 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 12px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">9:55</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">One-Pan Harissa Chicken</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">The Olive Press</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">40 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">EASY</span></div>
+                        <button onClick="{{ toggleR3 }}" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); cursor:pointer;">
+                          <sc-if value="{{ savedR3 }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                          <sc-if value="{{ notSavedR3 }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- card 4 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--accent) 12%, var(--surface-2)) 12px, color-mix(in srgb, var(--accent) 12%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">14:20</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Brown Butter Chocolate Chip Cookies</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">Flour &amp; Salt</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">45 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">EASY</span></div>
+                        <button onClick="{{ toggleR4 }}" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface); cursor:pointer;">
+                          <sc-if value="{{ savedR4 }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                          <sc-if value="{{ notSavedR4 }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></sc-if>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- card 5 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--secondary) 15%, var(--surface-2)) 12px, color-mix(in srgb, var(--secondary) 15%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">10:11</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Weeknight Green Curry</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">Bangkok Balcony</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">30 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">EASY</span></div>
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- card 6 -->
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 12px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:.1em;">VIDEO</span>
+                      <span style="position:absolute; right:8px; bottom:8px; padding:2px 7px; border-radius:5px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:10.5px;">7:33</span>
+                      <span style="position:absolute; left:8px; top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; background:color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter:blur(6px); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:9.5px; font-weight:600;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>RECIPE READY</span>
+                    </div>
+                    <div style="padding:13px 14px 15px;">
+                      <h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:18px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Smashed Potato Tacos</h4>
+                      <div style="display:flex; align-items:center; gap:7px; margin-bottom:11px;"><span style="width:18px; height:18px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span><span style="font-size:12.5px; color:var(--ink-2);">Fire &amp; Lime</span></div>
+                      <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">25 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:10px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 7px;">EASY</span></div>
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--line-2); border-radius:50%; background:var(--surface);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 02 VIDEO -> RECIPE -->
+          <div data-screen-label="Video to recipe extraction">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">02</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Video → recipe</span>
+              <span style="font-size:13.5px; color:var(--muted);">The signature moment — watching a video become a recipe.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/extract</span>
+              </div>
+              <div style="background:var(--paper); padding:26px; display:grid; grid-template-columns:1.35fr 1fr; gap:24px;">
+                <!-- left: video -->
+                <div>
+                  <div style="position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 14px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 14px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 28px); display:flex; align-items:center; justify-content:center;">
+                    <span style="width:62px; height:62px; border-radius:50%; background:color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-2);"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--accent)"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
+                    <div style="position:absolute; left:0; right:0; bottom:0; padding:12px 14px; background:linear-gradient(transparent, rgba(20,14,8,.55));">
+                      <div style="height:4px; border-radius:999px; background:rgba(255,255,255,.3);"><div style="height:100%; width:34%; border-radius:999px; background:var(--accent);"></div></div>
+                      <div style="display:flex; justify-content:space-between; margin-top:7px; font-family:'Spline Sans Mono',monospace; font-size:10.5px; color:#fff;"><span>2:54</span><span>8:42</span></div>
+                    </div>
+                  </div>
+                  <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:25px; line-height:1.15; margin:16px 0 10px; color:var(--ink);">15-Minute Garlic Butter Noodles</h3>
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="width:30px; height:30px; border-radius:50%; background:var(--secondary-soft); border:1px solid var(--line);"></span>
+                    <div style="flex:1;"><div style="font-size:14px; font-weight:600; color:var(--ink);">Lan's Kitchen</div><div style="font-size:12px; color:var(--muted);">1.2M views · 3 days ago</div></div>
+                    <button style="display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink-2); font-size:12.5px; font-weight:600; cursor:pointer;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"/></svg>
+                      Open original
+                    </button>
+                  </div>
+                </div>
+                <!-- right: extraction -->
+                <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:var(--shadow-1);">
+                  <div style="display:flex; align-items:center; gap:13px; margin-bottom:16px;">
+                    <span style="flex:0 0 auto; width:40px; height:40px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="animation:mise-pulse 1.6s ease-in-out infinite;"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></span>
+                    <div><div style="font-family:'Newsreader',serif; font-size:18px; color:var(--ink);">Writing your recipe…</div><div style="font-family:'Spline Sans Mono',monospace; font-size:11px; color:var(--muted);">Reading audio · on-screen text · description</div></div>
+                  </div>
+                  <div style="height:7px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-bottom:22px;"><div style="height:100%; width:68%; border-radius:999px; background:linear-gradient(90deg, var(--secondary), var(--accent)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></div></div>
+
+                  <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.08em; color:var(--muted); margin-bottom:12px;">INGREDIENTS · 4 FOUND</div>
+                  <div style="display:flex; flex-direction:column; gap:11px;">
+                    <div style="display:flex; align-items:center; gap:11px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:600; width:64px;">200 g</span><span style="font-size:14.5px; color:var(--ink);">dried spaghetti</span></div>
+                    <div style="display:flex; align-items:center; gap:11px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:600; width:64px;">4 cloves</span><span style="font-size:14.5px; color:var(--ink);">garlic, sliced</span></div>
+                    <div style="display:flex; align-items:center; gap:11px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--accent); font-weight:600; width:64px;">3 tbsp</span><span style="font-size:14.5px; color:var(--ink);">unsalted butter</span></div>
+                    <div style="display:flex; align-items:center; gap:11px; height:21px;"><span style="width:64px; height:13px; border-radius:5px; background:linear-gradient(90deg, var(--surface-2), color-mix(in srgb,var(--secondary) 20%, var(--surface-2)), var(--surface-2)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></span><span style="flex:1; height:13px; border-radius:5px; background:linear-gradient(90deg, var(--surface-2), color-mix(in srgb,var(--secondary) 20%, var(--surface-2)), var(--surface-2)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></span></div>
+                    <div style="display:flex; align-items:center; gap:11px; height:21px;"><span style="width:64px; height:13px; border-radius:5px; background:linear-gradient(90deg, var(--surface-2), color-mix(in srgb,var(--secondary) 20%, var(--surface-2)), var(--surface-2)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></span><span style="flex:1; max-width:140px; height:13px; border-radius:5px; background:linear-gradient(90deg, var(--surface-2), color-mix(in srgb,var(--secondary) 20%, var(--surface-2)), var(--surface-2)); background-size:460px 100%; animation:mise-shimmer 1.4s linear infinite;"></span></div>
+                  </div>
+                  <div style="margin-top:20px; padding:12px 14px; border-radius:11px; background:var(--accent-softer); border:1px solid var(--accent-line); font-size:12.5px; line-height:1.5; color:var(--on-soft);">You'll be able to check &amp; edit every ingredient and step before saving.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 03 RECIPE VIEW -->
+          <div data-screen-label="Recipe view">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">03</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Recipe view</span>
+              <span style="font-size:13.5px; color:var(--muted);">Clean, cookable, and always traceable to the source.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/r/garlic-butter-noodles</span>
+              </div>
+              <div style="background:var(--paper); padding:30px;">
+                <!-- header -->
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:28px; padding-bottom:24px; border-bottom:1px solid var(--line);">
+                  <div style="flex:1;">
+                    <div style="display:flex; gap:9px; margin-bottom:14px;">
+                      <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:10.5px; font-weight:500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>AI EXTRACTED</span>
+                      <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink-2); font-size:12px; font-weight:600;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"/></svg>Lan's Kitchen</span>
+                    </div>
+                    <h1 style="font-family:'Newsreader',serif; font-weight:400; font-size:46px; line-height:1.02; letter-spacing:-.015em; margin:0 0 14px; color:var(--ink);">Garlic Butter Noodles</h1>
+                    <div style="display:flex; align-items:center; gap:20px;">
+                      <span style="display:inline-flex; align-items:center; gap:7px; font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--ink-2);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>15 MIN</span>
+                      <span style="display:inline-flex; align-items:center; gap:7px; font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--ink-2);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>SERVES 2</span>
+                      <span style="display:inline-flex; align-items:center; gap:7px; font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--ink-2);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>EASY</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:10px; width:190px;">
+                    <button style="display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:13px 18px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-1);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>Start cooking</button>
+                    <button style="display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:12px 18px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink); font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saved</button>
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:340px 1fr; gap:32px; padding-top:26px;">
+                  <!-- left: video + ingredients -->
+                  <div>
+                    <div style="position:relative; aspect-ratio:16/10; border-radius:13px; overflow:hidden; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 12px, color-mix(in srgb, var(--secondary) 16%, var(--surface-2)) 24px); display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+                      <span style="width:48px; height:48px; border-radius:50%; background:color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-1);"><svg width="19" height="19" viewBox="0 0 24 24" fill="var(--accent)"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                      <h3 style="font-family:'Newsreader',serif; font-weight:600; font-size:22px; margin:0; color:var(--ink);">Ingredients</h3>
+                      <div style="display:flex; align-items:center; gap:11px; padding:5px 6px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface);">
+                        <span style="width:24px; height:24px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></span>
+                        <span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; font-weight:600; color:var(--ink);">2</span>
+                        <span style="width:24px; height:24px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+                      </div>
+                    </div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:6px 16px; box-shadow:var(--shadow-1);">
+<div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-bottom:1px solid var(--line);"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">200 g</span><span style="font-size:15px; color:var(--ink);">dried spaghetti</span></div>
+                      <div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-bottom:1px solid var(--line);"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">4 cloves</span><span style="font-size:15px; color:var(--ink);">garlic, thinly sliced</span></div>
+                      <div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-bottom:1px solid var(--line);"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">3 tbsp</span><span style="font-size:15px; color:var(--ink);">unsalted butter</span></div>
+                      <div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-bottom:1px solid var(--line);"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">½ tsp</span><span style="font-size:15px; color:var(--ink);">chili flakes</span></div>
+                      <div style="display:flex; align-items:center; gap:13px; padding:11px 0; border-bottom:1px solid var(--line);"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">30 g</span><span style="font-size:15px; color:var(--ink);">parmesan, grated</span></div>
+                      <div style="display:flex; align-items:center; gap:13px; padding:11px 0;"><span style="width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-family:'Spline Sans Mono',monospace; font-size:13px; color:var(--accent); font-weight:600; width:62px;">handful</span><span style="font-size:15px; color:var(--ink);">parsley, chopped</span></div>
+                    </div>
+                  </div>
+                  <!-- right: method -->
+                  <div>
+                    <h3 style="font-family:'Newsreader',serif; font-weight:600; font-size:22px; margin:0 0 18px; color:var(--ink);">Method</h3>
+                    <div style="display:flex; flex-direction:column; gap:22px;">
+<div style="display:flex; gap:18px;">
+                        <span style="flex:0 0 auto; width:32px; height:32px; border-radius:50%; background:var(--accent-soft); color:var(--on-soft); display:flex; align-items:center; justify-content:center; font-family:'Newsreader',serif; font-size:17px; font-weight:600;">1</span>
+                        <div style="padding-top:3px;">
+                          <p style="margin:0 0 11px; font-size:16px; line-height:1.6; color:var(--ink);">Bring a pot of well-salted water to the boil and cook the spaghetti until just shy of al dente. Reserve a mug of pasta water before draining.</p>
+                          <button style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border:1px solid var(--accent-line); border-radius:999px; background:transparent; color:var(--accent); font-family:'Spline Sans Mono',monospace; font-size:11px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent-soft);"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>JUMP TO 0:48</button>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:18px;">
+                        <span style="flex:0 0 auto; width:32px; height:32px; border-radius:50%; background:var(--accent-soft); color:var(--on-soft); display:flex; align-items:center; justify-content:center; font-family:'Newsreader',serif; font-size:17px; font-weight:600;">2</span>
+                        <div style="padding-top:3px;">
+                          <p style="margin:0 0 11px; font-size:16px; line-height:1.6; color:var(--ink);">Meanwhile, melt the butter over medium heat until it foams. Add the garlic and chili flakes and cook gently until fragrant and just golden — don't let the garlic brown.</p>
+                          <button style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border:1px solid var(--accent-line); border-radius:999px; background:transparent; color:var(--accent); font-family:'Spline Sans Mono',monospace; font-size:11px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent-soft);"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>JUMP TO 2:14</button>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:18px;">
+                        <span style="flex:0 0 auto; width:32px; height:32px; border-radius:50%; background:var(--accent-soft); color:var(--on-soft); display:flex; align-items:center; justify-content:center; font-family:'Newsreader',serif; font-size:17px; font-weight:600;">3</span>
+                        <div style="padding-top:3px;">
+                          <p style="margin:0 0 11px; font-size:16px; line-height:1.6; color:var(--ink);">Add the drained pasta to the pan with a splash of pasta water and the parmesan. Toss hard over the heat until glossy and emulsified, then fold through the parsley.</p>
+                          <button style="display:inline-flex; align-items:center; gap:7px; padding:6px 12px; border:1px solid var(--accent-line); border-radius:999px; background:transparent; color:var(--accent); font-family:'Spline Sans Mono',monospace; font-size:11px; font-weight:500; cursor:pointer;" style-hover="background:var(--accent-soft);"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>JUMP TO 5:30</button>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:18px;">
+                        <span style="flex:0 0 auto; width:32px; height:32px; border-radius:50%; background:var(--accent-soft); color:var(--on-soft); display:flex; align-items:center; justify-content:center; font-family:'Newsreader',serif; font-size:17px; font-weight:600;">4</span>
+                        <div style="padding-top:3px;">
+                          <p style="margin:0; font-size:16px; line-height:1.6; color:var(--ink);">Taste, season with sea salt and black pepper, and serve immediately with an extra grating of parmesan.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 04 SAVED COLLECTIONS -->
+          <div data-screen-label="Saved collections">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">04</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Saved &amp; collections</span>
+              <span style="font-size:13.5px; color:var(--muted);">Every recipe worth keeping, organised your way.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/saved</span>
+              </div>
+              <div style="background:var(--paper); padding:30px;">
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px;">
+                  <div>
+                    <h1 style="font-family:'Newsreader',serif; font-weight:400; font-size:40px; line-height:1; letter-spacing:-.01em; margin:0 0 6px; color:var(--ink);">Your kitchen</h1>
+                    <span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--muted);">24 recipes · 4 collections</span>
+                  </div>
+                  <button style="display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); color:var(--ink); font-size:14px; font-weight:600; cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>New collection</button>
+                </div>
+                <!-- collections row -->
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:30px;">
+                  <div style="padding:18px; border-radius:14px; background:var(--accent); color:var(--on-accent); box-shadow:var(--shadow-1);"><div style="font-family:'Newsreader',serif; font-size:21px; margin-bottom:3px;">All saved</div><div style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; opacity:.85;">24 recipes</div></div>
+                  <div style="padding:18px; border-radius:14px; background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow-1);"><div style="font-family:'Newsreader',serif; font-size:21px; color:var(--ink); margin-bottom:3px;">Weeknight</div><div style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted);">8 recipes</div></div>
+                  <div style="padding:18px; border-radius:14px; background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow-1);"><div style="font-family:'Newsreader',serif; font-size:21px; color:var(--ink); margin-bottom:3px;">To try</div><div style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted);">11 recipes</div></div>
+                  <div style="padding:18px; border-radius:14px; background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow-1);"><div style="font-family:'Newsreader',serif; font-size:21px; color:var(--ink); margin-bottom:3px;">Desserts</div><div style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted);">5 recipes</div></div>
+                </div>
+                <!-- saved grid -->
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:18px;">
+<div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/11; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; top:7px; width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,var(--paper) 90%,transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div>
+                    <div style="padding:12px 13px 14px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:16.5px; line-height:1.15; margin:0 0 7px; color:var(--ink);">Garlic Butter Noodles</h4><div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">15 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--on-soft); background:var(--accent-soft); border-radius:5px; padding:2px 6px;">Weeknight</span></div></div>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/11; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 11px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; top:7px; width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,var(--paper) 90%,transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div>
+                    <div style="padding:12px 13px 14px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:16.5px; line-height:1.15; margin:0 0 7px; color:var(--ink);">One-Pan Harissa Chicken</h4><div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">40 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--on-soft); background:var(--accent-soft); border-radius:5px; padding:2px 6px;">Weeknight</span></div></div>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/11; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; top:7px; width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,var(--paper) 90%,transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div>
+                    <div style="padding:12px 13px 14px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:16.5px; line-height:1.15; margin:0 0 7px; color:var(--ink);">Brown Butter Cookies</h4><div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">45 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--on-soft); background:var(--accent-soft); border-radius:5px; padding:2px 6px;">Desserts</span></div></div>
+                  </div>
+                  <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1);">
+                    <div style="position:relative; aspect-ratio:16/11; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 11px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; top:7px; width:26px; height:26px; border-radius:50%; background:color-mix(in srgb,var(--paper) 90%,transparent); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span></div>
+                    <div style="padding:12px 13px 14px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:16.5px; line-height:1.15; margin:0 0 7px; color:var(--ink);">Crispy Chili Oil Dumplings</h4><div style="display:flex; gap:5px;"><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">35 MIN</span><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--on-soft); background:var(--accent-soft); border-radius:5px; padding:2px 6px;">To try</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 05 SEARCH & FILTERS -->
+          <div data-screen-label="Search and filters">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">05</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Search &amp; filters</span>
+              <span style="font-size:13.5px; color:var(--muted);">Narrow by cuisine, time and diet to find dinner fast.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/search?q=noodles</span>
+              </div>
+              <div style="background:var(--paper); padding:26px; display:grid; grid-template-columns:240px 1fr; gap:26px;">
+                <!-- filter sidebar -->
+                <div>
+                  <div style="display:flex; align-items:center; gap:9px; padding:11px 14px; border:1px solid var(--line-2); border-radius:999px; background:var(--surface); margin-bottom:24px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <span style="font-size:14px; color:var(--ink);">noodles</span>
+                  </div>
+                  <div style="margin-bottom:24px;">
+                    <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:13px;">COOK TIME</div>
+                    <div style="display:flex; border:1px solid var(--line-2); border-radius:10px; overflow:hidden; background:var(--surface);">
+                      <span style="flex:1; text-align:center; padding:8px 0; font-size:12.5px; font-weight:600; color:var(--muted);">Any</span>
+                      <span style="flex:1; text-align:center; padding:8px 0; font-size:12.5px; font-weight:600; background:var(--accent); color:var(--on-accent);">&lt;30</span>
+                      <span style="flex:1; text-align:center; padding:8px 0; font-size:12.5px; font-weight:600; color:var(--muted);">&lt;60</span>
+                    </div>
+                  </div>
+                  <div style="margin-bottom:24px;">
+                    <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:13px;">CUISINE</div>
+                    <div style="display:flex; flex-direction:column; gap:11px;">
+                      <span style="display:flex; align-items:center; gap:11px;"><span style="width:19px; height:19px; border-radius:5px; border:1.5px solid var(--accent); background:var(--accent); display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span style="font-size:14px; color:var(--ink);">Chinese</span></span>
+                      <span style="display:flex; align-items:center; gap:11px;"><span style="width:19px; height:19px; border-radius:5px; border:1.5px solid var(--accent); background:var(--accent); display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span style="font-size:14px; color:var(--ink);">Italian</span></span>
+                      <span style="display:flex; align-items:center; gap:11px;"><span style="width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-size:14px; color:var(--ink-2);">Thai</span></span>
+                      <span style="display:flex; align-items:center; gap:11px;"><span style="width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line-2); background:var(--paper);"></span><span style="font-size:14px; color:var(--ink-2);">Japanese</span></span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:13px;">DIET</div>
+                    <div style="display:flex; flex-direction:column; gap:13px;">
+                      <span style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:14px; color:var(--ink);">Vegetarian</span><span style="position:relative; width:38px; height:22px; border-radius:999px; background:var(--accent);"><span style="position:absolute; top:2px; left:18px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.3);"></span></span></span>
+                      <span style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:14px; color:var(--ink-2);">Vegan</span><span style="position:relative; width:38px; height:22px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2);"><span style="position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--muted);"></span></span></span>
+                      <span style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:14px; color:var(--ink-2);">Gluten-free</span><span style="position:relative; width:38px; height:22px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line-2);"><span style="position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--muted);"></span></span></span>
+                    </div>
+                  </div>
+                </div>
+                <!-- results -->
+                <div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+                    <div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap;">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:12.5px; color:var(--ink-2);">38 results</span>
+                      <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-size:12px; font-weight:600;">Chinese <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></span>
+                      <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-size:12px; font-weight:600;">Under 30 min <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></span>
+                    </div>
+                    <span style="font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted);">Best match ▾</span>
+                  </div>
+                  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+<div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 17%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">8:42</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Garlic Butter Noodles</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">15 MIN</span></div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 11px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">12:08</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Chili Oil Noodles</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">20 MIN</span></div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">6:51</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Dan Dan Noodles</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">25 MIN</span></div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 11px, color-mix(in srgb, var(--accent) 14%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">9:30</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Sesame Cold Noodles</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">15 MIN</span></div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--secondary) 15%, var(--surface-2)) 11px, color-mix(in srgb, var(--secondary) 15%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">11:05</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Garlic Lo Mein</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">18 MIN</span></div></div>
+                    <div style="background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; box-shadow:var(--shadow-1);"><div style="position:relative; aspect-ratio:16/10; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 11px, color-mix(in srgb, var(--accent) 12%, var(--surface-2)) 11px, color-mix(in srgb, var(--accent) 12%, var(--surface-2)) 22px);"><span style="position:absolute; right:7px; bottom:7px; padding:2px 6px; border-radius:4px; background:rgba(20,14,8,.78); color:#fff; font-family:'Spline Sans Mono',monospace; font-size:9.5px;">7:18</span></div><div style="padding:11px 12px 13px;"><h4 style="font-family:'Newsreader',serif; font-weight:500; font-size:15.5px; line-height:1.15; margin:0 0 6px; color:var(--ink);">Soy Butter Udon</h4><span style="font-family:'Spline Sans Mono',monospace; font-size:9.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px;">12 MIN</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 06 ONBOARDING -->
+          <div data-screen-label="Onboarding">
+            <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
+              <span style="font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--accent);">06</span>
+              <span style="font-family:'Newsreader',serif; font-size:24px; color:var(--ink);">Onboarding</span>
+              <span style="font-size:13.5px; color:var(--muted);">Learn a new cook's taste in three quick steps.</span>
+            </div>
+            <div style="border-radius:16px; overflow:hidden; border:1px solid var(--line-2); box-shadow:var(--shadow-2);">
+              <div style="display:flex; align-items:center; gap:8px; padding:11px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);">
+                <span style="width:11px; height:11px; border-radius:50%; background:#E26D5A;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#E8B84B;"></span>
+                <span style="width:11px; height:11px; border-radius:50%; background:#5BAE6E;"></span>
+                <span style="margin-left:10px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--muted); background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:4px 14px;">mise.app/welcome</span>
+              </div>
+              <div style="background:var(--paper); display:grid; grid-template-columns:0.85fr 1.15fr; min-height:520px;">
+                <!-- left brand panel -->
+                <div style="background:var(--accent); color:var(--on-accent); padding:40px 38px; display:flex; flex-direction:column; justify-content:space-between;">
+                  <span style="font-family:'Newsreader',serif; font-weight:560; font-size:26px; letter-spacing:-.01em;">Mise</span>
+                  <div>
+                    <sc-if value="{{ onb1 }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.16em; opacity:.85;">WELCOME</span>
+                      <h2 style="font-family:'Newsreader',serif; font-weight:400; font-size:40px; line-height:1.05; letter-spacing:-.01em; margin:14px 0 14px;">Cook from the<br>videos you love.</h2>
+                      <p style="margin:0; font-size:15px; line-height:1.6; opacity:.9; max-width:300px;">Mise reads any YouTube food video and writes you a clean, step-by-step recipe.</p>
+                    </sc-if>
+                    <sc-if value="{{ onb2 }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.16em; opacity:.85;">STEP 2 OF 3</span>
+                      <h2 style="font-family:'Newsreader',serif; font-weight:400; font-size:40px; line-height:1.05; letter-spacing:-.01em; margin:14px 0 14px;">What do you<br>love to eat?</h2>
+                      <p style="margin:0; font-size:15px; line-height:1.6; opacity:.9; max-width:300px;">Pick a few — we'll tune your feed so the very first videos already feel like dinner.</p>
+                    </sc-if>
+                    <sc-if value="{{ onb3 }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.16em; opacity:.85;">ALL SET</span>
+                      <h2 style="font-family:'Newsreader',serif; font-weight:400; font-size:40px; line-height:1.05; letter-spacing:-.01em; margin:14px 0 14px;">Your kitchen<br>is ready.</h2>
+                      <p style="margin:0; font-size:15px; line-height:1.6; opacity:.9; max-width:300px;">We've lined up a feed around your taste. Paste a link any time to add more.</p>
+                    </sc-if>
+                  </div>
+                  <div>
+                    <sc-if value="{{ onb1 }}" hint-placeholder-val="{{ true }}"><div style="display:flex; gap:8px;"><span style="width:34px; height:5px; border-radius:999px; background:#fff;"></span><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span></div></sc-if>
+                    <sc-if value="{{ onb2 }}" hint-placeholder-val="{{ false }}"><div style="display:flex; gap:8px;"><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span><span style="width:34px; height:5px; border-radius:999px; background:#fff;"></span><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span></div></sc-if>
+                    <sc-if value="{{ onb3 }}" hint-placeholder-val="{{ false }}"><div style="display:flex; gap:8px;"><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span><span style="width:34px; height:5px; border-radius:999px; background:rgba(255,255,255,.4);"></span><span style="width:34px; height:5px; border-radius:999px; background:#fff;"></span></div></sc-if>
+                  </div>
+                </div>
+                <!-- right: step content -->
+                <div style="padding:40px 42px;">
+                  <sc-if value="{{ onb1 }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; flex-direction:column; min-height:440px;">
+                      <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:22px;">HOW MISE WORKS</div>
+                      <div style="display:flex; flex-direction:column; gap:18px; margin-bottom:auto;">
+                        <div style="display:flex; gap:15px; align-items:flex-start;">
+                          <span style="flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg></span>
+                          <div><div style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px;">Paste any YouTube link</div><div style="font-size:14px; line-height:1.5; color:var(--ink-2);">We turn it into ingredients and steps in seconds.</div></div>
+                        </div>
+                        <div style="display:flex; gap:15px; align-items:flex-start;">
+                          <span style="flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
+                          <div><div style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px;">Steps linked to the video</div><div style="font-size:14px; line-height:1.5; color:var(--ink-2);">Jump to the exact moment whenever you're unsure.</div></div>
+                        </div>
+                        <div style="display:flex; gap:15px; align-items:flex-start;">
+                          <span style="flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+                          <div><div style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px;">Save into collections</div><div style="font-size:14px; line-height:1.5; color:var(--ink-2);">Build your own cookbook, organised your way.</div></div>
+                        </div>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:18px; margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+                        <button onClick="{{ onbNext }}" style="display:inline-flex; align-items:center; gap:9px; padding:13px 28px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-1);">Get started<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+                        <span style="font-size:13.5px; color:var(--muted);">Already have an account? <span style="color:var(--accent); font-weight:600;">Sign in</span></span>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ onb2 }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; min-height:440px;">
+                      <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:14px;">CUISINES</div>
+                      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:30px;">
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:14px; font-weight:600;">Italian</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:14px; font-weight:600;">Thai</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:14px; font-weight:500;">Mexican</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:14px; font-weight:600;">Japanese</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:14px; font-weight:500;">Indian</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:14px; font-weight:500;">Middle Eastern</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:14px; font-weight:500;">French</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--accent); color:var(--on-accent); font-size:14px; font-weight:600;">Korean</span>
+                        <span style="padding:9px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink); font-size:14px; font-weight:500;">Mediterranean</span>
+                      </div>
+                      <div style="font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--muted); margin-bottom:14px;">ANY DIETARY NEEDS?</div>
+                      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:auto;">
+                        <span style="display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--accent-line); color:var(--on-soft); font-size:14px; font-weight:600;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Vegetarian</span>
+                        <span style="padding:9px 15px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink-2); font-size:14px; font-weight:500;">Vegan</span>
+                        <span style="padding:9px 15px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink-2); font-size:14px; font-weight:500;">Gluten-free</span>
+                        <span style="padding:9px 15px; border-radius:999px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink-2); font-size:14px; font-weight:500;">Dairy-free</span>
+                      </div>
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+                        <button onClick="{{ onbBack }}" style="display:inline-flex; align-items:center; gap:7px; padding:12px 8px; border:none; background:transparent; color:var(--muted); font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600; cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back</button>
+                        <button onClick="{{ onbNext }}" style="display:inline-flex; align-items:center; gap:9px; padding:13px 26px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-1);">Continue<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ onb3 }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; min-height:440px;">
+                      <span style="display:inline-flex; align-items:center; gap:8px; align-self:flex-start; padding:6px 13px; border-radius:999px; background:var(--accent-soft); color:var(--on-soft); font-family:'Spline Sans Mono',monospace; font-size:11px; font-weight:500; margin-bottom:20px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>FEED PERSONALISED</span>
+                      <h3 style="font-family:'Newsreader',serif; font-weight:500; font-size:26px; margin:0 0 18px; color:var(--ink);">A taste of what's waiting</h3>
+                      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:auto;">
+                        <div style="border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);"><div style="aspect-ratio:16/11; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 10px, color-mix(in srgb, var(--secondary) 18%, var(--surface-2)) 10px, color-mix(in srgb, var(--secondary) 18%, var(--surface-2)) 20px);"></div><div style="padding:10px 11px;"><div style="font-family:'Newsreader',serif; font-size:14.5px; line-height:1.15; color:var(--ink);">Cacio e Pepe</div></div></div>
+                        <div style="border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);"><div style="aspect-ratio:16/11; background:repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 10px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 10px, color-mix(in srgb, var(--accent) 13%, var(--surface-2)) 20px);"></div><div style="padding:10px 11px;"><div style="font-family:'Newsreader',serif; font-size:14.5px; line-height:1.15; color:var(--ink);">Pad Krapow</div></div></div>
+                        <div style="border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface);"><div style="aspect-ratio:16/11; background:repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 10px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 10px, color-mix(in srgb, var(--secondary) 20%, var(--surface-2)) 20px);"></div><div style="padding:10px 11px;"><div style="font-family:'Newsreader',serif; font-size:14.5px; line-height:1.15; color:var(--ink);">Kimchi Fried Rice</div></div></div>
+                      </div>
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+                        <button onClick="{{ onbBack }}" style="display:inline-flex; align-items:center; gap:7px; padding:12px 8px; border:none; background:transparent; color:var(--muted); font-family:'Hanken Grotesk',sans-serif; font-size:14px; font-weight:600; cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back</button>
+                        <button onClick="{{ onbRestart }}" style="display:inline-flex; align-items:center; gap:9px; padding:13px 28px; border:none; border-radius:999px; background:var(--accent); color:var(--on-accent); font-family:'Hanken Grotesk',sans-serif; font-size:15px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-1);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>Take me to my feed</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { mode: 'light', palette: 'ember', saved: { r1: true, r3: true }, extracting: false, onbStep: 1 };
+
+  renderVals() {
+    const { mode, palette } = this.state;
+    return {
+      mode,
+      palette,
+      modeLabel: mode === 'light' ? 'Light' : 'Dark',
+      toggleMode: () => this.setState(s => ({ mode: s.mode === 'light' ? 'dark' : 'light' })),
+      setSaffron: () => this.setState({ palette: 'saffron' }),
+      setBasil: () => this.setState({ palette: 'basil' }),
+      setHarissa: () => this.setState({ palette: 'harissa' }),
+      setEmber: () => this.setState({ palette: 'ember' }),
+      palSaffron: palette === 'saffron',
+      palBasil: palette === 'basil',
+      palHarissa: palette === 'harissa',
+      palEmber: palette === 'ember',
+      onb1: this.state.onbStep === 1,
+      onb2: this.state.onbStep === 2,
+      onb3: this.state.onbStep === 3,
+      onbNext: () => this.setState(s => ({ onbStep: Math.min(3, s.onbStep + 1) })),
+      onbBack: () => this.setState(s => ({ onbStep: Math.max(1, s.onbStep - 1) })),
+      onbRestart: () => this.setState({ onbStep: 1 }),
+      savedDemo: !!this.state.saved.demo,
+      notSavedDemo: !this.state.saved.demo,
+      savedDemoLabel: this.state.saved.demo ? 'Saved' : 'Save',
+      toggleDemo: () => this.setState(s => ({ saved: { ...s.saved, demo: !s.saved.demo } })),
+      savedR1: this.state.saved.r1 !== false,
+      savedR2: !!this.state.saved.r2,
+      savedR3: this.state.saved.r3 !== false,
+      savedR4: !!this.state.saved.r4,
+      notSavedR1: !(this.state.saved.r1 !== false),
+      notSavedR2: !this.state.saved.r2,
+      notSavedR3: !(this.state.saved.r3 !== false),
+      notSavedR4: !this.state.saved.r4,
+      toggleR1: () => this.setState(s => ({ saved: { ...s.saved, r1: s.saved.r1 === false } })),
+      toggleR2: () => this.setState(s => ({ saved: { ...s.saved, r2: !s.saved.r2 } })),
+      toggleR3: () => this.setState(s => ({ saved: { ...s.saved, r3: s.saved.r3 === false } })),
+      toggleR4: () => this.setState(s => ({ saved: { ...s.saved, r4: !s.saved.r4 } })),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -36,3 +36,6 @@ coverage/
 .claude/
 .venv-web/
 .venv-ml/
+
+# Imported design-system download (source lives in design/)
+Food discovery app design system.zip
