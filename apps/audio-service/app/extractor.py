@@ -29,7 +29,7 @@ class LocalGemmaExtractor:
 
     def __init__(self):
         self.url = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-        self.model = os.environ.get("GEMMA_MODEL", "gemma3n")
+        self.model = os.environ.get("GEMMA_MODEL", "gemma4:26b-a4b-it-qat")
 
     def extract(self, transcript: str, title: str | None) -> dict:
         prompt = build_prompt(transcript, title)
@@ -66,6 +66,27 @@ class HostedExtractor:
         return parse_recipe_response(content)
 
 
+class LlamaCppExtractor(HostedExtractor):
+    """A local llama.cpp server (OpenAI-compatible).
+
+    Used for GPU serving of large MoE models with expert offload (e.g. Gemma 4
+    26B-A4B with `-ngl 99 -ot exps=CPU`). Reuses HostedExtractor's OpenAI chat
+    call; llama.cpp ignores the api key and model fields for a single loaded
+    model.
+    """
+
+    def __init__(self):
+        self.url = os.environ.get(
+            "LLAMACPP_URL", "http://llamacpp:8080/v1/chat/completions"
+        )
+        self.api_key = os.environ.get("LLAMACPP_API_KEY", "")
+        self.model = os.environ.get("LLAMACPP_MODEL", "gemma")
+
+
 def get_extractor():
     backend = os.environ.get("EXTRACTOR_BACKEND", "local").lower()
-    return HostedExtractor() if backend == "hosted" else LocalGemmaExtractor()
+    if backend == "hosted":
+        return HostedExtractor()
+    if backend == "llamacpp":
+        return LlamaCppExtractor()
+    return LocalGemmaExtractor()
