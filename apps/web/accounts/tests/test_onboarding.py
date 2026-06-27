@@ -134,3 +134,26 @@ def test_completed_user_cannot_reenter_steps(auth_client, user, path):
     user.refresh_from_db()
     # the guard runs before any save, so a completed user's prefs are untouched
     assert user.preferred_cuisines == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("path", ["/profile/", "/saved/", "/favorites/"])
+def test_incomplete_user_gated_from_authed_pages(auth_client, path):
+    # The whole authenticated surface — not just the feed — bounces an
+    # un-onboarded user into the wizard, so onboarding can't be sidestepped.
+    resp = auth_client.get(path)
+    assert resp.status_code == 302
+    assert resp.headers["Location"] == "/onboarding/"
+
+
+@pytest.mark.django_db
+def test_tastes_dedupes_and_orders(auth_client, user):
+    # A crafted POST with repeats must not bloat the stored list; values come
+    # back deduped and in the canonical option order regardless of POST order.
+    auth_client.post(
+        "/onboarding/tastes/",
+        {"cuisines": ["Thai", "Italian", "Italian"], "diets": ["Vegan", "Vegan"]},
+    )
+    user.refresh_from_db()
+    assert user.preferred_cuisines == ["Italian", "Thai"]
+    assert user.dietary_tags == ["Vegan"]

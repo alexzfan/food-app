@@ -12,7 +12,7 @@
       </div>
       <form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="#recipe-{{ recipe.id }}" hx-swap="outerHTML">
         {% csrf_token %}
-        <button class="btn--icon" type="submit" aria-label="Favorite">{% if recipe.is_favorite %}♥{% else %}♡{% endif %}</button>
+        <button class="btn--icon" type="submit" aria-label="{% if recipe.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">{% if recipe.is_favorite %}♥{% else %}♡{% endif %}</button>
       </form>
     </div>
   </div>

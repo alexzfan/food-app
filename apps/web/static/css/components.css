@@ -31,6 +31,8 @@
 .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
 .chip--selected,
 .chip:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+/* the real control is visually hidden, so surface keyboard focus on the chip */
+.chip:has(input:focus-visible) { outline: 2px solid var(--accent-line); outline-offset: 2px; }
 
 /* badges */
 .badge {

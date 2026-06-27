@@ -44,6 +44,7 @@ def signup(request):
 
 
 @login_required
+@onboarding_required
 def profile(request):
     if request.method == "POST":
         request.user.display_name = request.POST.get("display_name", "")
@@ -55,7 +56,7 @@ def profile(request):
 def onboarding(request):
     if request.user.onboarding_completed:
         return redirect("discover")
-    return render(request, "accounts/onboarding_welcome.html")
+    return render(request, "accounts/onboarding_welcome.html", {"step": 1})
 
 
 @login_required
@@ -71,8 +72,12 @@ def onboarding_tastes(request):
     if request.user.onboarding_completed:
         return redirect("discover")
     if request.method == "POST":
-        chosen_cuisines = [c for c in request.POST.getlist("cuisines") if c in CUISINE_OPTIONS]
-        chosen_diets = [d for d in request.POST.getlist("diets") if d in DIET_OPTIONS]
+        # Filter against the canonical lists: dedupes, bounds the stored length to
+        # the number of options, and gives a stable order regardless of POST order.
+        submitted_cuisines = set(request.POST.getlist("cuisines"))
+        submitted_diets = set(request.POST.getlist("diets"))
+        chosen_cuisines = [c for c in CUISINE_OPTIONS if c in submitted_cuisines]
+        chosen_diets = [d for d in DIET_OPTIONS if d in submitted_diets]
         request.user.preferred_cuisines = chosen_cuisines
         request.user.dietary_tags = chosen_diets
         request.user.save(update_fields=["preferred_cuisines", "dietary_tags"])

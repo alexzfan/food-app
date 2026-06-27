@@ -22,6 +22,7 @@ def discover(request):
 
 
 @login_required
+@onboarding_required
 def youtube_search(request):
     query = request.GET.get("q", "").strip()
     videos = []
@@ -42,6 +43,7 @@ def youtube_search(request):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def start_job(request):
     source = request.POST.get("source", "upload")
@@ -75,6 +77,7 @@ def start_job(request):
 
 
 @login_required
+@onboarding_required
 def job_status(request, pk):
     job = get_object_or_404(ExtractionJob, pk=pk, owner=request.user)
     if job.status == ExtractionJob.Status.DONE and job.recipe_id:
@@ -115,6 +118,7 @@ def favorites(request):
 
 
 @login_required
+@onboarding_required
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     recipe.is_favorite = Favorite.objects.filter(
@@ -124,6 +128,7 @@ def recipe_detail(request, pk):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def toggle_favorite(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
@@ -140,6 +145,7 @@ def toggle_favorite(request, pk):
 
 
 @login_required
+@onboarding_required
 @require_POST
 def delete_recipe(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
