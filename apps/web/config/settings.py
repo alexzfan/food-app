@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -70,8 +71,9 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Production serves hashed, compressed assets via WhiteNoise's manifest storage.
 # Tests render templates with {% static %} but never run collectstatic, so the
-# manifest does not exist — fall back to plain storage there (set in conftest).
-_TESTING = os.environ.get("DJANGO_TESTING") == "1"
+# manifest does not exist — fall back to plain storage under pytest. Detecting via
+# sys.modules avoids any settings-import-ordering coupling with conftest/env vars.
+_TESTING = "pytest" in sys.modules
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
