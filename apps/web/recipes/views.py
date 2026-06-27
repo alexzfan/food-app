@@ -8,12 +8,15 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from accounts.views import onboarding_required
+
 from . import youtube
 from .models import ExtractionJob, Favorite, Recipe
 from .tasks import run_extraction_job
 
 
 @login_required
+@onboarding_required
 def discover(request):
     return render(request, "recipes/discover.html")
 
@@ -92,6 +95,7 @@ def _annotated(qs, user):
 
 
 @login_required
+@onboarding_required
 def saved(request):
     q = request.GET.get("q", "").strip()
     recipes = _annotated(Recipe.objects.filter(owner=request.user), request.user)
@@ -101,6 +105,7 @@ def saved(request):
 
 
 @login_required
+@onboarding_required
 def favorites(request):
     recipes = _annotated(
         Recipe.objects.filter(owner=request.user, favorited_by__user=request.user),
