@@ -52,9 +52,16 @@ class HostedExtractor:
 
     def extract(self, transcript: str, title: str | None) -> dict:
         prompt = build_prompt(transcript, title)
+        # Only send Authorization when we actually have a key. An empty key
+        # yields "Bearer ", whose trailing space h11 rejects at send time
+        # ("Illegal header value") — which is how the local llama.cpp backend
+        # (no api key) failed before the request ever left the service.
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         resp = httpx.post(
             self.url,
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers=headers,
             json={
                 "model": self.model,
                 "messages": [{"role": "user", "content": prompt}],

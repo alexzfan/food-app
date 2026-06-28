@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -8,6 +9,8 @@ from pydantic import BaseModel
 
 from .extractor import get_extractor
 from .transcription import probe_duration, transcribe_file
+
+logger = logging.getLogger("recipe-ml")
 
 app = FastAPI(title="Recipe ML Service", version="2.0.0")
 app.add_middleware(
@@ -60,4 +63,7 @@ async def extract(req: ExtractRequest):
     try:
         return extractor.extract(req.transcript, req.title)
     except Exception as e:  # noqa: BLE001
+        # Log the real cause + traceback server-side; a bare 502 in the access
+        # log is undiagnosable. The cause is also returned in the detail.
+        logger.exception("extract failed")
         raise HTTPException(status_code=502, detail=f"Extraction failed: {e}")
