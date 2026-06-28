@@ -1,10 +1,25 @@
+import logging
 import re
+from xml.etree.ElementTree import ParseError as XMLParseError
 
 import httpx
 from django.conf import settings
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import (
+    CouldNotRetrieveTranscript,
+    IpBlocked,
+    RequestBlocked,
+    YouTubeTranscriptApi,
+    YouTubeRequestFailed,
+)
+
+logger = logging.getLogger(__name__)
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
+
+# Errors worth retrying: YouTube rate-limited/blocked us or the request flaked.
+# Everything else (captions disabled, none found, video unavailable) is
+# permanent for this video — retrying just delays the manual fallback.
+TRANSIENT_TRANSCRIPT_ERRORS = (RequestBlocked, IpBlocked, YouTubeRequestFailed)
 
 _ISO_DURATION = re.compile(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
 
@@ -102,12 +117,40 @@ def _enrich(videos):
 
 
 def fetch_transcript(video_id):
-    """Return joined caption text for a video, or None if unavailable."""
+    """Return joined caption text for a video, or None if unavailable.
+
+    Logs the underlying cause so a returned None is diagnosable: known
+    "no transcript" cases at INFO/WARNING, anything unexpected with a
+    traceback at ERROR.
+    """
     try:
-        segments = YouTubeTranscriptApi.get_transcript(video_id)
-        text = " ".join(seg["text"] for seg in segments).strip()
+        fetched = YouTubeTranscriptApi().fetch(video_id)
+        text = " ".join(snippet.text for snippet in fetched).strip()
+        if not text:
+            logger.info("fetch_transcript: empty transcript for %s", video_id)
         return text or None
+    except TRANSIENT_TRANSCRIPT_ERRORS as exc:
+        logger.warning(
+            "fetch_transcript: transient failure for %s: %s",
+            video_id, type(exc).__name__,
+        )
+        return None
+    except XMLParseError:
+        # YouTube returned an empty/garbled caption body; the library parses it
+        # with ElementTree.fromstring and lets the ParseError bubble (still the
+        # case in 1.2.x). Usually throttling or an empty track — not a code bug.
+        logger.warning("fetch_transcript: empty transcript body for %s", video_id)
+        return None
+    except CouldNotRetrieveTranscript as exc:
+        # Captions disabled / none found / video unavailable — expected, permanent.
+        logger.info(
+            "fetch_transcript: no transcript for %s: %s",
+            video_id, type(exc).__name__,
+        )
+        return None
     except Exception:
+        # Unknown — could be a library/API change. Capture the traceback.
+        logger.exception("fetch_transcript: unexpected error for %s", video_id)
         return None
 
 

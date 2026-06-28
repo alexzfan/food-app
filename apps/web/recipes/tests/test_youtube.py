@@ -107,9 +107,14 @@ def test_format_views():
 
 
 def test_fetch_transcript_joins_segments():
-    segments = [{"text": "boil water"}, {"text": "add pasta"}]
+    from youtube_transcript_api import FetchedTranscriptSnippet
+
+    snippets = [
+        FetchedTranscriptSnippet(text="boil water", start=0.0, duration=1.0),
+        FetchedTranscriptSnippet(text="add pasta", start=1.0, duration=1.0),
+    ]
     with patch(
-        "recipes.youtube.YouTubeTranscriptApi.get_transcript", return_value=segments
+        "recipes.youtube.YouTubeTranscriptApi.fetch", return_value=snippets
     ):
         text = youtube.fetch_transcript("vid")
     assert text == "boil water add pasta"
@@ -117,10 +122,33 @@ def test_fetch_transcript_joins_segments():
 
 def test_fetch_transcript_returns_none_on_error():
     with patch(
-        "recipes.youtube.YouTubeTranscriptApi.get_transcript",
+        "recipes.youtube.YouTubeTranscriptApi.fetch",
         side_effect=Exception("no captions"),
     ):
         assert youtube.fetch_transcript("vid") is None
+
+
+def test_fetch_transcript_empty_body_not_logged_as_error(caplog):
+    # YouTube sometimes returns an empty body for the caption track, which the
+    # library surfaces as an XML ParseError. That's a known/expected failure
+    # (throttling or an empty track), not a code bug — don't log a traceback.
+    import logging
+    import xml.etree.ElementTree as ElementTree
+
+    err = ElementTree.ParseError("no element found: line 1, column 0")
+    # The recipes logger sets propagate=False (see settings.LOGGING), so attach
+    # caplog's handler directly rather than relying on propagation to root.
+    yt_logger = logging.getLogger("recipes.youtube")
+    yt_logger.addHandler(caplog.handler)
+    try:
+        with patch("recipes.youtube.YouTubeTranscriptApi.fetch", side_effect=err):
+            with caplog.at_level(logging.INFO, logger="recipes.youtube"):
+                assert youtube.fetch_transcript("vid") is None
+    finally:
+        yt_logger.removeHandler(caplog.handler)
+
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
+    assert any("empty transcript body" in r.getMessage() for r in caplog.records)
 
 
 def test_search_suggestions_filters_by_prefix():
