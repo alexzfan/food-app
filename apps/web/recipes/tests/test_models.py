@@ -31,3 +31,7 @@ def test_extraction_job_starts_queued(user):
     job = ExtractionJob.objects.create(owner=user, source=ExtractionJob.Source.UPLOAD)
     assert job.status == ExtractionJob.Status.QUEUED
     assert job.recipe is None
+
+
+def test_youtube_captions_source_exists():
+    assert ExtractionJob.Source.YOUTUBE_CAPTIONS == "youtube_captions"

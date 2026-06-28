@@ -61,6 +61,7 @@ class ExtractionJob(models.Model):
         UPLOAD = "upload"
         PASTE_TRANSCRIPT = "paste_transcript"
         PASTE_TEXT = "paste_text"
+        YOUTUBE_CAPTIONS = "youtube_captions"
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="jobs"
