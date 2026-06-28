@@ -1,0 +1,8 @@
+<form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="this" hx-swap="outerHTML" style="display:inline-flex;">
+  {% csrf_token %}
+  <input type="hidden" name="context" value="search">
+  <button class="save{% if recipe.is_favorite %} save--on{% endif %}" type="submit"
+          aria-label="{% if recipe.is_favorite %}Remove from saved{% else %}Save recipe{% endif %}">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="{% if recipe.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+  </button>
+</form>

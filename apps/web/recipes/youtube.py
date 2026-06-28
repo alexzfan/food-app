@@ -1,7 +1,37 @@
+import re
+
 import httpx
 from django.conf import settings
+from youtube_transcript_api import YouTubeTranscriptApi
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
+
+_ISO_DURATION = re.compile(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
+
+
+def _format_duration(iso):
+    """ISO-8601 video duration -> (total_seconds, display) e.g. (522, "8:42")."""
+    if not iso:
+        return None, ""
+    match = _ISO_DURATION.fullmatch(iso)
+    if not match or not any(match.groups()):
+        return None, ""
+    hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    total = hours * 3600 + minutes * 60 + seconds
+    if hours:
+        return total, f"{hours}:{minutes:02d}:{seconds:02d}"
+    return total, f"{minutes}:{seconds:02d}"
+
+
+def _format_views(count):
+    """Integer view count -> short label e.g. 1_200_000 -> "1.2M"."""
+    if count is None:
+        return ""
+    if count >= 1_000_000:
+        return f"{count / 1_000_000:.1f}M"
+    if count >= 1_000:
+        return f"{count // 1_000}K"
+    return str(count)
 
 
 def search_recipe_videos(query, max_results=10, page_token=None):
@@ -34,4 +64,91 @@ def search_recipe_videos(query, max_results=10, page_token=None):
                 "channel_id": snip["channelId"],
             }
         )
+    _enrich(videos)
     return {"videos": videos, "next_page_token": data.get("nextPageToken")}
+
+
+def _enrich(videos):
+    """Add duration/view/caption fields via one videos.list call (best-effort)."""
+    ids = [v["id"] for v in videos]
+    if not ids:
+        return
+    details = {}
+    try:
+        resp = httpx.get(
+            f"{YOUTUBE_API_BASE}/videos",
+            params={
+                "part": "contentDetails,statistics",
+                "id": ",".join(ids),
+                "key": settings.YOUTUBE_API_KEY,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        details = {item["id"]: item for item in resp.json().get("items", [])}
+    except Exception:
+        details = {}
+    for video in videos:
+        item = details.get(video["id"], {})
+        content = item.get("contentDetails", {})
+        stats = item.get("statistics", {})
+        seconds, display = _format_duration(content.get("duration", ""))
+        video["duration_seconds"] = seconds
+        video["duration_display"] = display
+        raw_views = stats.get("viewCount")
+        video["view_count"] = int(raw_views) if raw_views is not None else None
+        video["view_count_display"] = _format_views(video["view_count"])
+        video["has_captions"] = content.get("caption") == "true"
+
+
+def fetch_transcript(video_id):
+    """Return joined caption text for a video, or None if unavailable."""
+    try:
+        segments = YouTubeTranscriptApi.get_transcript(video_id)
+        text = " ".join(seg["text"] for seg in segments).strip()
+        return text or None
+    except Exception:
+        return None
+
+
+TRENDING = ["Birria tacos", "Gochujang pasta", "Smash burger", "Tonkotsu ramen"]
+CUISINES = [
+    {"name": "Italian"},
+    {"name": "Thai"},
+    {"name": "Mexican"},
+    {"name": "Japanese"},
+    {"name": "Korean"},
+    {"name": "Indian"},
+]
+
+_SUGGEST_DISHES = [
+    "cacio e pepe",
+    "cacio e pepe authentic roman",
+    "cacio e pepe for two",
+    "miso salmon",
+    "miso glazed salmon",
+    "focaccia",
+    "chili crisp eggs",
+    "birria tacos",
+    "gochujang pasta",
+    "smash burger",
+    "tonkotsu ramen",
+    "french omelette",
+    "chocolate souffle",
+]
+_SUGGEST_CREATORS = [
+    {"name": "Italia Squisita", "subs": "1.9M subscribers"},
+    {"name": "Pasta Grannies", "subs": "980K subscribers"},
+    {"name": "Lan's Kitchen", "subs": "1.2M subscribers"},
+    {"name": "Weeknight Pasta", "subs": "220K subscribers"},
+]
+
+
+def search_suggestions(query):
+    """Curated autocomplete stub filtered by substring of the query."""
+    needle = query.strip().lower()
+    if not needle:
+        return {"queries": [], "creators": []}
+    queries = [d for d in _SUGGEST_DISHES if needle in d.lower()][:5]
+    creators = [c for c in _SUGGEST_CREATORS if needle in c["name"].lower()][:3]
+    return {"queries": queries, "creators": creators}

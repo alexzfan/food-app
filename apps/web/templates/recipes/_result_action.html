@@ -1,0 +1,22 @@
+{% if video.recipe %}
+  <div style="display:flex; gap:6px;">
+    {% if video.recipe.cook_time_minutes %}<span class="badge badge--time">{{ video.recipe.cook_time_minutes }} MIN</span>{% endif %}
+    {% if video.recipe.difficulty %}<span class="badge badge--difficulty">{{ video.recipe.difficulty|upper }}</span>{% endif %}
+  </div>
+  {% if layout == "list" %}<span class="rrow__spacer"></span>{% endif %}
+  {% include "recipes/_save_button.html" with recipe=video.recipe %}
+  {% if layout == "list" %}<a class="open-recipe" href="{% url 'recipe_detail' video.recipe.id %}">Open recipe<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>{% endif %}
+{% elif video.has_captions %}
+  <span class="state-label">CAPTIONS · READY TO EXTRACT</span>
+  {% if layout == "list" %}<span class="rrow__spacer"></span>{% endif %}
+  <form hx-post="{% url 'extract_recipe' %}" hx-target="#action-{{ video.id }}" hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="video_id" value="{{ video.id }}">
+    <input type="hidden" name="title" value="{{ video.title }}">
+    <button class="extract" type="submit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M6 6l12 12M18 6 6 18"></path></svg>Extract{% if layout == "list" %} recipe{% endif %}</button>
+  </form>
+{% else %}
+  <span class="state-label state-label--muted">NO CAPTIONS — CAN'T EXTRACT</span>
+  {% if layout == "list" %}<span class="rrow__spacer"></span>{% endif %}
+  <a class="watch-link" href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank" rel="noopener">Watch on YouTube</a>
+{% endif %}

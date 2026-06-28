@@ -1,0 +1,23 @@
+{% if suggestions.queries or suggestions.creators %}
+<div class="suggest-menu">
+  {% if suggestions.queries %}
+  <div class="suggest-menu__label">SUGGESTIONS</div>
+  {% for s in suggestions.queries %}
+  <div class="suggest-menu__item" hx-get="{% url 'youtube_search' %}?q={{ s|urlencode }}" hx-target="#results" hx-indicator="#search-indicator" @click="open = false">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+    <span>{{ s }}</span>
+  </div>
+  {% endfor %}
+  {% endif %}
+  {% if suggestions.creators %}
+  <hr>
+  <div class="suggest-menu__label">CREATORS</div>
+  {% for c in suggestions.creators %}
+  <div class="suggest-menu__item" hx-get="{% url 'youtube_search' %}?q={{ c.name|urlencode }}" hx-target="#results" hx-indicator="#search-indicator" @click="open = false">
+    <span class="av" style="width:30px; height:30px;"></span>
+    <div style="flex:1;"><div style="font-weight:600;">{{ c.name }}</div><div class="suggest-menu__sub">{{ c.subs }}</div></div>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endif %}
