@@ -1,0 +1,32 @@
+{% if layout == "list" %}
+<div class="rrow{% if not video.recipe and not video.has_captions %} rcard--muted{% endif %}" id="vid-{{ video.id }}">
+  <div class="rrow__thumb">
+    {% if video.thumbnail_url %}<img src="{{ video.thumbnail_url }}" alt="">{% endif %}
+    {% if video.recipe %}<span class="ready">RECIPE READY</span>
+    {% else %}<span class="playc{% if not video.has_captions %} playc--muted{% endif %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></span>{% endif %}
+    {% if video.has_captions %}<span class="cc">CC</span>{% else %}<span class="cc cc--muted">NO CC</span>{% endif %}
+    {% if video.duration_display %}<span class="dur">{{ video.duration_display }}</span>{% endif %}
+  </div>
+  <div class="rrow__body">
+    <h4 class="rtitle" style="font-size:21px;">{% if video.recipe %}<a href="{% url 'recipe_detail' video.recipe.id %}">{{ video.title }}</a>{% else %}{{ video.title }}{% endif %}</h4>
+    <div class="credit"><span class="av"></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
+    {% if video.description %}<p class="rrow__desc">{{ video.description|truncatechars:160 }}</p>{% endif %}
+    <div class="rrow__foot" id="action-{{ video.id }}">{% include "recipes/_result_action.html" with layout="list" %}</div>
+  </div>
+</div>
+{% else %}
+<div class="rcard{% if not video.recipe and not video.has_captions %} rcard--muted{% endif %}" id="vid-{{ video.id }}">
+  <div class="rthumb">
+    {% if video.thumbnail_url %}<img src="{{ video.thumbnail_url }}" alt="">{% endif %}
+    {% if video.recipe %}<span class="ready">RECIPE READY</span>
+    {% else %}<span class="playc{% if not video.has_captions %} playc--muted{% endif %}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></span>{% endif %}
+    {% if video.has_captions %}<span class="cc">CC</span>{% else %}<span class="cc cc--muted">NO CC</span>{% endif %}
+    {% if video.duration_display %}<span class="dur">{{ video.duration_display }}</span>{% endif %}
+  </div>
+  <div class="rcard__body">
+    <h4 class="rtitle">{% if video.recipe %}<a href="{% url 'recipe_detail' video.recipe.id %}">{{ video.title }}</a>{% else %}{{ video.title }}{% endif %}</h4>
+    <div class="credit"><span class="av"></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
+    <div class="rcard__action" id="action-{{ video.id }}">{% include "recipes/_result_action.html" with layout="grid" %}</div>
+  </div>
+</div>
+{% endif %}

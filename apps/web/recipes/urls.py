@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.discover, name="discover"),
     path("youtube/search/", views.youtube_search, name="youtube_search"),
+    path("youtube/extract/", views.extract_from_captions, name="extract_recipe"),
     path("jobs/start/", views.start_job, name="start_job"),
     path("jobs/<int:pk>/status/", views.job_status, name="job_status"),
     path("saved/", views.saved, name="saved"),

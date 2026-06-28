@@ -1,17 +1,38 @@
-{% if error %}<p>{{ error }}</p>{% endif %}
-{% for v in videos %}
-<div class="video-card" x-data="{ open: false }">
-  <img src="{{ v.thumbnail_url }}" alt="" width="240">
-  <h3>{{ v.title }}</h3>
-  <p>{{ v.channel_title }}</p>
-  <button @click="open = !open">Use this video</button>
-  <div x-show="open">
-    <iframe width="320" height="180"
-            src="https://www.youtube.com/embed/{{ v.id }}"
-            frameborder="0" allowfullscreen></iframe>
-    {% include "recipes/_ingest_panel.html" with video=v %}
+{% if error %}<div class="info-note" style="margin-bottom:18px;">{{ error }}</div>{% endif %}
+<div class="results-head">
+  <div>
+    <div class="results-count">{{ total }} VIDEOS · {{ shown }} SHOWN · FROM YOUTUBE</div>
+    <h2 class="results-title">Results for "{{ query }}"</h2>
+  </div>
+  <div class="results-tools">
+    <span class="sort">Relevance <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+    <div class="vtog">
+      <a class="{% if view == 'grid' %}on{% endif %}" hx-get="{% url 'youtube_search' %}?q={{ query|urlencode }}&filter={{ active_filter }}&view=grid" hx-target="#results" hx-indicator="#search-indicator" aria-label="Grid view"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></a>
+      <a class="{% if view == 'list' %}on{% endif %}" hx-get="{% url 'youtube_search' %}?q={{ query|urlencode }}&filter={{ active_filter }}&view=list" hx-target="#results" hx-indicator="#search-indicator" aria-label="List view"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3.5" y1="6" x2="3.51" y2="6"></line><line x1="3.5" y1="12" x2="3.51" y2="12"></line><line x1="3.5" y1="18" x2="3.51" y2="18"></line></svg></a>
+    </div>
   </div>
 </div>
-{% empty %}
-{% if query %}<p>No videos found.</p>{% endif %}
-{% endfor %}
+{% if videos %}
+<div class="filter-row">
+  {% for f in filters %}
+  <a class="fchip{% if f.key == active_filter %} fchip--on{% endif %}" hx-get="{% url 'youtube_search' %}?q={{ query|urlencode }}&view={{ view }}&filter={{ f.key }}" hx-target="#results" hx-indicator="#search-indicator">{{ f.label }}</a>
+  {% endfor %}
+</div>
+<div class="{% if view == 'list' %}result-list{% else %}result-grid{% endif %}">
+  {% for video in videos %}{% include "recipes/_video_result_card.html" with layout=view %}{% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state__icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path><path d="m8.5 8.5 5 5M13.5 8.5l-5 5"></path></svg></div>
+  <h3 class="empty-state__title">No cookable videos found</h3>
+  <p class="empty-state__copy">We couldn't find captioned cooking videos for "{{ query }}". Mise can only build recipes from videos that have captions, so very new or very niche clips sometimes come up short.</p>
+  <div class="seclabel">TRY ONE OF THESE</div>
+  <div class="empty-state__chips">
+    <a class="fchip fchip--soft" hx-get="{% url 'youtube_search' %}?q=Cacio e pepe" hx-target="#results" hx-indicator="#search-indicator">Cacio e pepe</a>
+    <a class="fchip fchip--soft" hx-get="{% url 'youtube_search' %}?q=Chocolate soufflé" hx-target="#results" hx-indicator="#search-indicator">Chocolate soufflé</a>
+    <a class="fchip fchip--soft" hx-get="{% url 'youtube_search' %}?q=French omelette" hx-target="#results" hx-indicator="#search-indicator">French omelette</a>
+    <a class="fchip fchip--soft" hx-get="{% url 'youtube_search' %}?q=Miso salmon" hx-target="#results" hx-indicator="#search-indicator">Miso salmon</a>
+    <a class="fchip fchip--soft" hx-get="{% url 'youtube_search' %}?q=Birria tacos" hx-target="#results" hx-indicator="#search-indicator">Birria tacos</a>
+  </div>
+</div>
+{% endif %}
