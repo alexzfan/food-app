@@ -121,3 +121,18 @@ def test_fetch_transcript_returns_none_on_error():
         side_effect=Exception("no captions"),
     ):
         assert youtube.fetch_transcript("vid") is None
+
+
+def test_search_suggestions_filters_by_prefix():
+    result = youtube.search_suggestions("cacio")
+    assert any("cacio" in q.lower() for q in result["queries"])
+    assert all("cacio" in q.lower() for q in result["queries"])
+
+
+def test_search_suggestions_empty_query():
+    assert youtube.search_suggestions("") == {"queries": [], "creators": []}
+
+
+def test_landing_constants_present():
+    assert len(youtube.TRENDING) >= 4
+    assert all("name" in c for c in youtube.CUISINES)

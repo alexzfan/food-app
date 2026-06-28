@@ -109,3 +109,46 @@ def fetch_transcript(video_id):
         return text or None
     except Exception:
         return None
+
+
+TRENDING = ["Birria tacos", "Gochujang pasta", "Smash burger", "Tonkotsu ramen"]
+CUISINES = [
+    {"name": "Italian"},
+    {"name": "Thai"},
+    {"name": "Mexican"},
+    {"name": "Japanese"},
+    {"name": "Korean"},
+    {"name": "Indian"},
+]
+
+_SUGGEST_DISHES = [
+    "cacio e pepe",
+    "cacio e pepe authentic roman",
+    "cacio e pepe for two",
+    "miso salmon",
+    "miso glazed salmon",
+    "focaccia",
+    "chili crisp eggs",
+    "birria tacos",
+    "gochujang pasta",
+    "smash burger",
+    "tonkotsu ramen",
+    "french omelette",
+    "chocolate souffle",
+]
+_SUGGEST_CREATORS = [
+    {"name": "Italia Squisita", "subs": "1.9M subscribers"},
+    {"name": "Pasta Grannies", "subs": "980K subscribers"},
+    {"name": "Lan's Kitchen", "subs": "1.2M subscribers"},
+    {"name": "Weeknight Pasta", "subs": "220K subscribers"},
+]
+
+
+def search_suggestions(query):
+    """Curated autocomplete stub filtered by substring of the query."""
+    needle = query.strip().lower()
+    if not needle:
+        return {"queries": [], "creators": []}
+    queries = [d for d in _SUGGEST_DISHES if needle in d.lower()][:5]
+    creators = [c for c in _SUGGEST_CREATORS if needle in c["name"].lower()][:3]
+    return {"queries": queries, "creators": creators}
