@@ -285,6 +285,11 @@
 
 [x-cloak] { display: none !important; }
 
+/* the skeleton indicator must not reserve layout space while idle
+   (htmx's default only animates opacity, which leaves a tall gap) */
+#search-indicator { display: none; }
+#search-indicator.htmx-request { display: block; }
+
 @media (max-width: 720px) {
   .landing-cols { grid-template-columns: 1fr; gap: 28px; }
   .result-grid { grid-template-columns: 1fr; }
