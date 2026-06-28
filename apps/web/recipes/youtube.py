@@ -63,4 +63,38 @@ def search_recipe_videos(query, max_results=10, page_token=None):
                 "channel_id": snip["channelId"],
             }
         )
+    _enrich(videos)
     return {"videos": videos, "next_page_token": data.get("nextPageToken")}
+
+
+def _enrich(videos):
+    """Add duration/view/caption fields via one videos.list call (best-effort)."""
+    ids = [v["id"] for v in videos]
+    if not ids:
+        return
+    details = {}
+    try:
+        resp = httpx.get(
+            f"{YOUTUBE_API_BASE}/videos",
+            params={
+                "part": "contentDetails,statistics",
+                "id": ",".join(ids),
+                "key": settings.YOUTUBE_API_KEY,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        details = {item["id"]: item for item in resp.json().get("items", [])}
+    except Exception:
+        details = {}
+    for video in videos:
+        item = details.get(video["id"], {})
+        content = item.get("contentDetails", {})
+        stats = item.get("statistics", {})
+        seconds, display = _format_duration(content.get("duration", ""))
+        video["duration_seconds"] = seconds
+        video["duration_display"] = display
+        raw_views = stats.get("viewCount")
+        video["view_count"] = int(raw_views) if raw_views is not None else None
+        video["view_count_display"] = _format_views(video["view_count"])
+        video["has_captions"] = content.get("caption") == "true"
