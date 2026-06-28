@@ -9,7 +9,7 @@ class SignupForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["email", "display_name"]
+        fields = ["email"]
 
     def save(self, commit=True):
         user = super().save(commit=False)

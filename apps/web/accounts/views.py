@@ -43,6 +43,14 @@ def signup(request):
     return render(request, "accounts/signup.html", {"form": form})
 
 
+def verify_email(request):
+    """Standalone styled preview of the email-verification screen.
+
+    Not wired into signup (see the account-flow spec) — renders only.
+    """
+    return render(request, "accounts/verify_email.html")
+
+
 @login_required
 @onboarding_required
 def profile(request):

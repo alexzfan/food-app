@@ -1,6 +1,8 @@
 import pytest
 from django.contrib.auth import get_user_model
 
+from accounts.forms import SignupForm
+
 User = get_user_model()
 
 
@@ -14,6 +16,18 @@ def test_signup_creates_user_and_logs_in(client):
     user = User.objects.get(email="cook@example.com")
     assert user.check_password("supersecret")
     assert "_auth_user_id" in client.session
+
+
+@pytest.mark.django_db
+def test_signup_does_not_require_display_name(client):
+    resp = client.post(
+        "/signup/", {"email": "no-name@example.com", "password": "supersecret"}
+    )
+    assert resp.status_code == 302
+    u = User.objects.get(email="no-name@example.com")
+    assert u.check_password("supersecret")
+    assert u.display_name == ""
+    assert "display_name" not in SignupForm().fields
 
 
 @pytest.mark.django_db
