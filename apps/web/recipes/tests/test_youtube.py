@@ -104,3 +104,20 @@ def test_format_views():
     assert youtube._format_views(75_000) == "75K"
     assert youtube._format_views(950) == "950"
     assert youtube._format_views(None) == ""
+
+
+def test_fetch_transcript_joins_segments():
+    segments = [{"text": "boil water"}, {"text": "add pasta"}]
+    with patch(
+        "recipes.youtube.YouTubeTranscriptApi.get_transcript", return_value=segments
+    ):
+        text = youtube.fetch_transcript("vid")
+    assert text == "boil water add pasta"
+
+
+def test_fetch_transcript_returns_none_on_error():
+    with patch(
+        "recipes.youtube.YouTubeTranscriptApi.get_transcript",
+        side_effect=Exception("no captions"),
+    ):
+        assert youtube.fetch_transcript("vid") is None

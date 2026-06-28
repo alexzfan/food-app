@@ -2,6 +2,7 @@ import re
 
 import httpx
 from django.conf import settings
+from youtube_transcript_api import YouTubeTranscriptApi
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
 
@@ -98,3 +99,13 @@ def _enrich(videos):
         video["view_count"] = int(raw_views) if raw_views is not None else None
         video["view_count_display"] = _format_views(video["view_count"])
         video["has_captions"] = content.get("caption") == "true"
+
+
+def fetch_transcript(video_id):
+    """Return joined caption text for a video, or None if unavailable."""
+    try:
+        segments = YouTubeTranscriptApi.get_transcript(video_id)
+        text = " ".join(seg["text"] for seg in segments).strip()
+        return text or None
+    except Exception:
+        return None
