@@ -42,6 +42,51 @@ def test_get_extractor_selects_backend(monkeypatch):
     assert isinstance(get_extractor(), LocalGemmaExtractor)
 
 
+class _FakeResp:
+    def __init__(self, content='{"title": "Pasta"}'):
+        self._content = content
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return {"choices": [{"message": {"content": self._content}}]}
+
+
+def test_llamacpp_extractor_omits_auth_header_when_no_key(monkeypatch):
+    # An empty LLAMACPP_API_KEY must NOT produce "Authorization: Bearer " — the
+    # trailing-space value is rejected by h11 at send time (LocalProtocolError:
+    # Illegal header value b'Bearer '), which surfaced as a 502 from /extract
+    # before any request ever reached llama.cpp.
+    from app.extractor import LlamaCppExtractor
+
+    monkeypatch.delenv("LLAMACPP_API_KEY", raising=False)
+    captured = {}
+    monkeypatch.setattr(
+        "app.extractor.httpx.post",
+        lambda url, **kwargs: captured.update(kwargs) or _FakeResp(),
+    )
+
+    LlamaCppExtractor().extract("boil pasta", "Pasta")
+
+    assert "Authorization" not in captured["headers"]
+
+
+def test_hosted_extractor_sends_auth_header_when_key_set(monkeypatch):
+    from app.extractor import HostedExtractor
+
+    monkeypatch.setenv("HOSTED_LLM_API_KEY", "sk-real")
+    captured = {}
+    monkeypatch.setattr(
+        "app.extractor.httpx.post",
+        lambda url, **kwargs: captured.update(kwargs) or _FakeResp(),
+    )
+
+    HostedExtractor().extract("boil pasta", "Pasta")
+
+    assert captured["headers"]["Authorization"] == "Bearer sk-real"
+
+
 def test_extract_endpoint_uses_extractor():
     fake = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
 
@@ -53,3 +98,24 @@ def test_extract_endpoint_uses_extractor():
         resp = client.post("/extract", json={"transcript": "boil pasta", "title": "Pasta"})
     assert resp.status_code == 200
     assert resp.json() == fake
+
+
+def test_extract_endpoint_logs_cause_on_failure(caplog):
+    # The 502 must not be a black box: the underlying cause is logged
+    # server-side (with traceback) so ml logs are diagnosable, and is also
+    # returned in the response detail.
+    import logging
+
+    class Boom:
+        def extract(self, transcript, title):
+            raise RuntimeError("llamacpp connection refused")
+
+    with patch("app.main.get_extractor", return_value=Boom()):
+        with caplog.at_level(logging.ERROR):
+            resp = client.post("/extract", json={"transcript": "x"})
+
+    assert resp.status_code == 502
+    assert "llamacpp connection refused" in resp.json()["detail"]
+    assert any(
+        "extract failed" in r.getMessage() and r.exc_info for r in caplog.records
+    )
