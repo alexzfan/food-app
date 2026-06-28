@@ -27,6 +27,7 @@
 
     <form method="post">
       {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
       {% if form.non_field_errors %}<div class="auth-error" style="margin-bottom:14px;">{{ form.non_field_errors|striptags }}</div>{% endif %}
       <div class="auth-field">
         <label class="auth-label" for="id_username">Email</label>
