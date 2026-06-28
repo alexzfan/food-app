@@ -26,4 +26,4 @@ echo -e "${YELLOW}🗑️  Stopping services and removing volumes...${NC}"
 docker compose down -v
 
 echo -e "${GREEN}🔄 Restarting services with fresh database...${NC}"
-./scripts/start.sh
+docker compose up -d --build
