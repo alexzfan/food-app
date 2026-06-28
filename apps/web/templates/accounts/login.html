@@ -1,7 +1,47 @@
-{% extends "base.html" %}
-{% block title %}Log in{% endblock %}
+{% extends "base_auth.html" %}
+{% block title %}Sign in{% endblock %}
 {% block content %}
-<h1>Log in</h1>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Log in</button></form>
-<a href="{% url 'signup' %}">Need an account? Sign up</a>
+<div class="auth-split" data-screen-label="Sign in">
+  <aside class="auth-brand">
+    <span class="auth-brand__logo">Mise</span>
+    <div>
+      <span class="auth-brand__tag">WELCOME BACK</span>
+      <h2 class="auth-brand__head">Your kitchen<br>is waiting.</h2>
+      <p class="auth-brand__copy">Sign back in to pick up your feed, your saved recipes, and your collections — right where you left them.</p>
+    </div>
+    <ul class="auth-brand__perks">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Your saved recipes, synced</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Pick up mid-recipe, any device</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Your taste, already tuned</li>
+    </ul>
+  </aside>
+  <div class="auth-formpanel">
+    <h1 class="auth-card__title">Sign in</h1>
+    <p class="auth-card__sub">Good to see you back in the kitchen.</p>
+
+    <button class="btn btn--social btn--block" type="button" disabled aria-label="Continue with Google (coming soon)">
+      <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.2 35.5 24 35.5c-6.4 0-11.5-5.1-11.5-11.5S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.6 6.2 29.1 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5c10.7 0 19.5-8.7 19.5-19.5 0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.8 14.7l6.6 4.8C15.2 15.1 19.2 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l5.7-5.7C33.6 6.2 29.1 4.5 24 4.5c-7.3 0-13.7 4.1-16.9 10.2z"/><path fill="#4CAF50" d="M24 43.5c5.1 0 9.5-1.7 12.9-4.6l-6.2-5c-1.9 1.4-4.3 2.1-6.7 2.1-5.2 0-9.6-3.1-11.3-7.5l-6.5 5C9.4 39.3 16 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.5l6.2 5c-.4.4 6.7-4.9 6.7-14.5 0-1.2-.1-2.3-.4-3.5z"/></svg>
+      Continue with Google <span class="coming-soon">SOON</span>
+    </button>
+    <div class="auth-divider"><span>OR</span></div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="auth-error" style="margin-bottom:14px;">{{ form.non_field_errors|striptags }}</div>{% endif %}
+      <div class="auth-field">
+        <label class="auth-label" for="id_username">Email</label>
+        <input class="text-input" type="email" name="username" id="id_username" autocomplete="email" placeholder="you@example.com" value="{{ form.username.value|default:'' }}" required>
+      </div>
+      <div class="auth-field">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <label class="auth-label" for="id_password">Password</label>
+          <a class="auth-label" style="color:var(--accent);" href="{% url 'password_reset' %}">Forgot?</a>
+        </div>
+        <input class="text-input" type="password" name="password" id="id_password" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn--primary btn--block" type="submit">Sign in</button>
+    </form>
+    <p class="auth-foot">New to Mise? <a href="{% url 'signup' %}">Create an account</a></p>
+  </div>
+</div>
 {% endblock %}

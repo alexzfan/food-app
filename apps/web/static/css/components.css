@@ -164,3 +164,24 @@
   display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 22px; color: var(--ink);
 }
 .code-input span.is-filled { border-color: var(--accent-line); }
+
+/* auth — split-panel (sign in / create account) */
+.auth-split {
+  width: 100%; max-width: 940px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-xl); box-shadow: var(--shadow-2); overflow: hidden;
+  display: grid; grid-template-columns: 0.82fr 1.18fr;
+}
+.auth-brand { background: var(--accent); color: var(--on-accent); padding: 40px 38px; display: flex; flex-direction: column; justify-content: space-between; gap: 34px; }
+.auth-brand__logo { font-family: var(--font-display); font-weight: 560; font-size: 26px; letter-spacing: -.01em; }
+.auth-brand__tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; opacity: .85; }
+.auth-brand__head { font-family: var(--font-display); font-weight: 400; font-size: 34px; line-height: 1.07; letter-spacing: -.015em; margin: 12px 0 14px; }
+.auth-brand__copy { margin: 0; font-size: 14.5px; line-height: 1.6; opacity: .9; }
+.auth-brand__perks { display: flex; flex-direction: column; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.auth-brand__perks li { display: flex; align-items: center; gap: 11px; font-size: 13.5px; opacity: .94; }
+.auth-brand__perks svg { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.18); padding: 5px; box-sizing: border-box; }
+.auth-formpanel { padding: 40px 42px; display: flex; flex-direction: column; }
+@media (max-width: 720px) {
+  .auth-split { grid-template-columns: 1fr; max-width: 460px; }
+  .auth-brand { display: none; }
+  .auth-formpanel { padding: 36px 30px; }
+}
