@@ -101,6 +101,16 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "discover"
 LOGOUT_REDIRECT_URL = "login"
 
+# Email — console backend by default so dev (and password reset) works with no
+# secrets and never silently fails to an unconfigured SMTP server. Override in
+# production via DJANGO_EMAIL_BACKEND + the standard EMAIL_* settings.
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DJANGO_DEFAULT_FROM_EMAIL", "Mise <no-reply@mise.local>"
+)
+
 # Upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB
 
