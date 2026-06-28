@@ -20,66 +20,29 @@ services:
     image: redis:7
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama:latest
-    restart: unless-stopped
-    volumes:
-      - ollama-data:/root/.ollama
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
-    # GPU is strongly recommended for a 26B model. If you have the NVIDIA
-    # Container Toolkit installed, uncomment to pass GPUs through:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
-
-  # One-shot: waits for ollama, pulls the model, then exits. The model is
-  # cached in the ollama-data volume, so this is a no-op on later starts.
-  ollama-pull:
-    image: ollama/ollama:latest
-    depends_on:
-      ollama:
-        condition: service_started
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        until ollama list >/dev/null 2>&1; do echo "waiting for ollama..."; sleep 2; done
-        ollama pull ${GEMMA_MODEL:-gemma4:26b-a4b-it-qat}
-    restart: "no"
-
   ml:
     build: ./apps/audio-service
     restart: unless-stopped
     environment:
       WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
       MAX_DURATION_SECONDS: ${MAX_DURATION_SECONDS:-900}
-      EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-local}
-      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
-      GEMMA_MODEL: ${GEMMA_MODEL:-gemma4:26b-a4b-it-qat}
+      EXTRACTOR_BACKEND: ${EXTRACTOR_BACKEND:-llamacpp}
       LLAMACPP_URL: ${LLAMACPP_URL:-http://llamacpp:8080/v1/chat/completions}
       HOSTED_LLM_URL: ${HOSTED_LLM_URL:-}
       HOSTED_LLM_API_KEY: ${HOSTED_LLM_API_KEY:-}
       HOSTED_LLM_MODEL: ${HOSTED_LLM_MODEL:-}
     depends_on:
-      ollama:
+      llamacpp:
         condition: service_started
     ports:
       - "${ML_PORT:-8001}:8001"
 
-  # GPU path (opt-in): llama.cpp server running the 26B-A4B MoE with expert
+  # Local LLM backend: llama.cpp server running the 26B-A4B MoE with expert
   # offload -- attention/shared weights on GPU, sparse experts in system RAM.
-  # Enable with: EXTRACTOR_BACKEND=llamacpp docker compose --profile gpu up
-  # Uses the unsloth GGUF directly (loads fine in llama.cpp; only Ollama's pull
-  # 400s on it). Needs the NVIDIA Container Toolkit.
+  # Uses the unsloth GGUF directly. Requires an NVIDIA GPU + the NVIDIA
+  # Container Toolkit.
   llamacpp:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
-    profiles: ["gpu"]
     restart: unless-stopped
     environment:
       LLAMA_CACHE: /cache
@@ -155,5 +118,4 @@ services:
 volumes:
   db-data:
   upload-data:
-  ollama-data:
   llamacpp-data:
