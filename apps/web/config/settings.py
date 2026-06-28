@@ -120,4 +120,26 @@ UPLOAD_DIR = os.environ.get(
     "UPLOAD_DIR", str(Path(tempfile.gettempdir()) / "recipe-web-uploads")
 )
 
+# Logging — app loggers (recipes.*) go to the console so failures like a
+# swallowed transcript fetch are diagnosable in dev and in container logs.
+# Level is env-tunable; defaults to INFO.
+LOG_LEVEL = os.environ.get("DJANGO_LOG_LEVEL", "INFO").upper()
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "recipes": {"handlers": ["console"], "level": LOG_LEVEL, "propagate": False},
+    },
+}
+
 AUTH_USER_MODEL = "accounts.User"
