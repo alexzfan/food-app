@@ -1,0 +1,14 @@
+{% extends "base_auth.html" %}
+{% comment %}Preview-only screen — not wired into signup. See the account-flow spec.{% endcomment %}
+{% block title %}Verify your email{% endblock %}
+{% block content %}
+<div class="auth-card" data-screen-label="Verify email">
+  <div class="auth-card__title">Verify your email</div>
+  <p class="auth-card__sub">We sent a 6-digit code to <strong style="color:var(--ink);">you@example.com</strong>. Enter it below to confirm it's you.</p>
+  <div class="code-input" aria-hidden="true">
+    <span class="is-filled">4</span><span class="is-filled">8</span><span></span><span></span><span></span><span></span>
+  </div>
+  <button class="btn btn--primary btn--block" type="button" disabled>Verify email</button>
+  <p class="auth-foot"><span style="color:var(--accent);font-weight:600;">Resend code</span> &nbsp;·&nbsp; <span style="color:var(--accent);font-weight:600;">Change email</span></p>
+</div>
+{% endblock %}

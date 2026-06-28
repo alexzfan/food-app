@@ -9,12 +9,14 @@ from .views import (
     onboarding_tastes,
     profile,
     signup,
+    verify_email,
 )
 
 urlpatterns = [
     path("login/", AppLoginView.as_view(), name="login"),
     path("logout/", AppLogoutView.as_view(), name="logout"),
     path("signup/", signup, name="signup"),
+    path("verify-email/", verify_email, name="verify_email"),
     path("profile/", profile, name="profile"),
     path("onboarding/", onboarding, name="onboarding"),
     path("onboarding/skip/", onboarding_skip, name="onboarding_skip"),
