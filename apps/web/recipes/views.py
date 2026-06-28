@@ -68,7 +68,26 @@ def _remember_search(request, query):
 @login_required
 @onboarding_required
 def discover(request):
-    return render(request, "recipes/discover.html")
+    return render(
+        request,
+        "recipes/discover.html",
+        {
+            "trending": youtube.TRENDING,
+            "cuisines": youtube.CUISINES,
+            "recent_searches": request.session.get("recent_searches", []),
+        },
+    )
+
+
+@login_required
+@onboarding_required
+def suggest(request):
+    q = request.GET.get("q", "").strip()
+    return render(
+        request,
+        "recipes/_suggestions.html",
+        {"suggestions": youtube.search_suggestions(q), "q": q},
+    )
 
 
 @login_required

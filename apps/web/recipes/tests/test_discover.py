@@ -22,7 +22,7 @@ def test_discover_requires_login(client, db):
 def test_discover_renders_for_user(auth_client):
     resp = auth_client.get("/")
     assert resp.status_code == 200
-    assert b"Discover recipes" in resp.content
+    assert b"What do you want to cook?" in resp.content
 
 
 def test_youtube_search_renders_results(auth_client):

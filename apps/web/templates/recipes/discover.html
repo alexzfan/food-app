@@ -1,9 +1,59 @@
 {% extends "base.html" %}
 {% block title %}Discover{% endblock %}
 {% block content %}
-<h1>Discover recipes</h1>
-<input type="search" name="q" placeholder="Search YouTube for recipes..."
-       hx-get="{% url 'youtube_search' %}" hx-target="#results"
-       hx-trigger="keyup changed delay:500ms, search">
-<div id="results"></div>
+<div class="search-landing">
+  <div class="search-hero" x-data="{ open: false }" @click.outside="open = false">
+    <div class="eyebrow" style="text-align:center; font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);">SEARCH YOUTUBE</div>
+    <h1 class="search-hero__title">What do you want to cook?</h1>
+    <form class="hero-field" hx-get="{% url 'youtube_search' %}" hx-target="#results" hx-indicator="#search-indicator" @submit="open = false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input class="hero-field__input" type="search" name="q" autocomplete="off"
+             placeholder="Try &ldquo;cacio e pepe&rdquo;, &ldquo;miso salmon&rdquo;, &ldquo;focaccia&rdquo;&hellip;"
+             hx-get="{% url 'suggest' %}" hx-target="#suggest" hx-trigger="keyup changed delay:200ms"
+             @focus="open = true" @keyup="open = true">
+      <button class="btn btn--primary" type="submit">Search <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+    </form>
+    <div id="suggest" x-show="open" x-cloak></div>
+  </div>
+
+  <div id="search-indicator" class="htmx-indicator">{% include "recipes/_skeleton.html" %}</div>
+
+  <div id="results">
+    <div class="landing-cols">
+      <div>
+        {% if recent_searches %}
+        <div class="seclabel">RECENT SEARCHES</div>
+        <div class="chip-row">
+          {% for term in recent_searches %}
+          <a class="schip" hx-get="{% url 'youtube_search' %}?q={{ term|urlencode }}" hx-target="#results" hx-indicator="#search-indicator">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>{{ term }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="seclabel">TRENDING THIS WEEK</div>
+        <div class="trending">
+          {% for dish in trending %}
+          <a class="trending-row" hx-get="{% url 'youtube_search' %}?q={{ dish|urlencode }}" hx-target="#results" hx-indicator="#search-indicator">
+            <span class="trending-row__rank">{{ forloop.counter|stringformat:"02d" }}</span>
+            <span class="trending-row__name">{{ dish }}</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      <div>
+        <div class="seclabel">BROWSE BY CUISINE</div>
+        <div class="cuisine-grid">
+          {% for c in cuisines %}
+          <a class="cuisine-tile" hx-get="{% url 'youtube_search' %}?q={{ c.name|urlencode }}" hx-target="#results" hx-indicator="#search-indicator">
+            <span class="cuisine-tile__name">{{ c.name }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        <div class="info-note">Mise only searches recipe-style cooking videos with captions, so every result can become a real, editable recipe.</div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
