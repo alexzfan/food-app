@@ -119,6 +119,17 @@ def test_parse_coerces_instruction_start():
     assert starts == [12, 13, None, None]
 
 
+def test_parse_coerces_mmss_start():
+    # LLMs frequently emit clock strings instead of integer seconds.
+    raw = (
+        '{"title": "Noodles", "instructions": ['
+        '{"step": 1, "text": "a", "start": "1:30"},'
+        '{"step": 2, "text": "b", "start": "1:02:03"}]}'
+    )
+    starts = [s.get("start") for s in parse_recipe_response(raw)["instructions"]]
+    assert starts == [90, 3723]
+
+
 def test_extract_endpoint_logs_cause_on_failure(caplog):
     # The 502 must not be a black box: the underlying cause is logged
     # server-side (with traceback) so ml logs are diagnosable, and is also

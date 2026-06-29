@@ -10,6 +10,17 @@ from .prompt import build_prompt
 def _coerce_start(value):
     if isinstance(value, bool) or value is None:
         return None
+    # LLMs often emit a clock string ("1:30", "1:02:03") despite the prompt
+    # asking for integer seconds; parse those rather than dropping the timestamp.
+    if isinstance(value, str) and ":" in value:
+        try:
+            parts = [int(p) for p in value.strip().split(":")]
+        except ValueError:
+            return None
+        seconds = 0
+        for part in parts:
+            seconds = seconds * 60 + part
+        return seconds
     try:
         return int(float(value))
     except (TypeError, ValueError):
