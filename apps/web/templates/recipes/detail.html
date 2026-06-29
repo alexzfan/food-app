@@ -52,11 +52,16 @@
   <div class="rv-grid">
     <div class="rv-left">
       {% if recipe.youtube_video_id %}
-      {# Render the iframe ourselves with referrerpolicy set: Django's default
-         same-origin Referrer-Policy strips the Referer on the cross-origin embed
-         request, which trips YouTube error 153. enablejsapi=1 lets the IFrame
-         API attach to this element for tap-to-seek without building its own
-         (referrerpolicy-less) iframe. #}
+      {% comment %}
+         {# #} comments are single-line in Django, so a multi-line one leaks
+         onto the page as literal text -- use {% comment %} here.
+         The Referer reaches YouTube because SECURE_REFERRER_POLICY is set to
+         strict-origin-when-cross-origin app-wide (Django's same-origin default
+         strips it and trips YouTube error 153) -- see config/settings.py. We
+         still render the iframe ourselves with enablejsapi=1 so the IFrame API
+         attaches to this element for tap-to-seek instead of building its own;
+         the referrerpolicy attribute mirrors the header as belt-and-suspenders.
+      {% endcomment %}
       <div class="rv-video">
         <iframe id="yt-player"
                 src="https://www.youtube.com/embed/{{ recipe.youtube_video_id }}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
@@ -67,11 +72,14 @@
                 allowfullscreen></iframe>
       </div>
       {% endif %}
+      {% if recipe.channel_name or recipe.youtube_video_id %}
       <div class="rv-credit">
         <span class="rv-credit__avatar"></span>
+        {% if recipe.channel_name %}
         <div class="rv-credit__meta">
-          <div class="rv-credit__name">{{ recipe.channel_name|default:"Unknown channel" }}</div>
+          <div class="rv-credit__name">{{ recipe.channel_name }}</div>
         </div>
+        {% endif %}
         {% if recipe.youtube_video_id %}
         <a class="rv-credit__yt" href="https://www.youtube.com/watch?v={{ recipe.youtube_video_id }}" target="_blank" rel="noopener">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"></path></svg>
@@ -79,6 +87,7 @@
         </a>
         {% endif %}
       </div>
+      {% endif %}
 
       <div class="rv-ings__head">
         <h3 class="rv-h3">Ingredients</h3>
