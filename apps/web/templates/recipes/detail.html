@@ -5,7 +5,7 @@
 <p>{{ recipe.description }}</p>
 {% if recipe.youtube_video_id %}
 <iframe width="320" height="180" src="https://www.youtube.com/embed/{{ recipe.youtube_video_id }}"
-        frameborder="0" allowfullscreen></iframe>
+        frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 {% endif %}
 <h2>Ingredients</h2>
 <ul>{% for i in recipe.ingredients %}<li>{{ i.amount }} {{ i.unit }} {{ i.name }}{% if i.notes %} ({{ i.notes }}){% endif %}</li>{% endfor %}</ul>

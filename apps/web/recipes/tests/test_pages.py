@@ -74,6 +74,17 @@ def test_delete_recipe(auth_client, user):
     assert not Recipe.objects.filter(pk=r.id).exists()
 
 
+def test_detail_youtube_embed_sets_referrerpolicy(auth_client, user):
+    # Django's default Referrer-Policy (same-origin) strips the Referer on the
+    # cross-origin request to youtube.com, which makes the embedded player fail
+    # with a "Video player configuration error" (error 153). The iframe must
+    # opt into an origin-sending policy so YouTube can validate the embed.
+    r = Recipe.objects.create(owner=user, title="Cake", youtube_video_id="dQw4w9WgXcQ")
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert b"https://www.youtube.com/embed/dQw4w9WgXcQ" in resp.content
+    assert b'referrerpolicy="strict-origin-when-cross-origin"' in resp.content
+
+
 def test_profile_updates_display_name(auth_client, user):
     auth_client.post("/profile/", {"display_name": "Chef Alex"})
     user.refresh_from_db()
