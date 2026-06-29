@@ -106,18 +106,18 @@ def test_format_views():
     assert youtube._format_views(None) == ""
 
 
-def test_fetch_transcript_joins_segments():
+def test_fetch_transcript_includes_timestamps():
     from youtube_transcript_api import FetchedTranscriptSnippet
 
     snippets = [
         FetchedTranscriptSnippet(text="boil water", start=0.0, duration=1.0),
-        FetchedTranscriptSnippet(text="add pasta", start=1.0, duration=1.0),
+        FetchedTranscriptSnippet(text="add pasta", start=12.7, duration=1.0),
     ]
     with patch(
         "recipes.youtube.YouTubeTranscriptApi.fetch", return_value=snippets
     ):
         text = youtube.fetch_transcript("vid")
-    assert text == "boil water add pasta"
+    assert text == "[0] boil water\n[12] add pasta"
 
 
 def test_fetch_transcript_returns_none_on_error():
