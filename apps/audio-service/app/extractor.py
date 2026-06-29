@@ -7,6 +7,15 @@ import httpx
 from .prompt import build_prompt
 
 
+def _coerce_start(value):
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_recipe_response(text: str) -> dict:
     s = text.strip()
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", s)
@@ -21,6 +30,9 @@ def parse_recipe_response(text: str) -> dict:
     recipe.setdefault("ingredients", [])
     recipe.setdefault("instructions", [])
     recipe.setdefault("tags", [])
+    for step in recipe["instructions"]:
+        if isinstance(step, dict):
+            step["start"] = _coerce_start(step.get("start"))
     return recipe
 
 

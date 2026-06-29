@@ -9,7 +9,7 @@ Analyze the following transcript from a cooking video and extract the recipe det
     {"name": "ingredient name", "amount": "quantity as string", "unit": "measurement unit (optional)", "notes": "notes like 'diced' (optional)"}
   ],
   "instructions": [
-    {"step": 1, "text": "Clear instruction text", "duration": "time if mentioned (optional)"}
+    {"step": 1, "text": "Clear instruction text", "start": 12, "duration": "time if mentioned (optional)"}
   ],
   "tags": ["relevant", "tags"],
   "cuisine": "cuisine type if identifiable",
@@ -22,6 +22,7 @@ Analyze the following transcript from a cooking video and extract the recipe det
 Guidelines:
 - Extract ALL ingredients mentioned
 - Number instructions sequentially
+- Each transcript line may be prefixed with its start time in seconds in square brackets, e.g. "[12] add the garlic". Set each instruction's "start" to the integer seconds tag of the line where that step begins. Use null when the transcript has no timestamps or the moment is unclear.
 - Use null for unknown values
 - Return ONLY the JSON, no other text
 
