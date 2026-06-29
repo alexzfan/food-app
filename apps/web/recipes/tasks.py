@@ -26,10 +26,18 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
         _set(job, ExtractionJob.Status.EXTRACTING, "Extracting recipe...")
         summary = ml_client.extract(transcript, job.title or None)
 
+        # Persist the transcript only for caption sources: it's [seconds]-tagged
+        # and powers tap-to-seek. Pasted/transcribed text isn't timestamped and
+        # nothing reads it back, so storing it would just retain arbitrary text.
+        stored_transcript = (
+            transcript
+            if job.source == ExtractionJob.Source.YOUTUBE_CAPTIONS
+            else ""
+        )
         recipe = Recipe.objects.create(
             owner=job.owner,
             youtube_video_id=job.youtube_video_id,
-            transcript=transcript or "",
+            transcript=stored_transcript or "",
             title=summary["title"],
             description=summary.get("description", ""),
             ingredients=summary.get("ingredients", []),

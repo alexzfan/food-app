@@ -28,7 +28,7 @@ class Recipe(models.Model):
     difficulty = models.CharField(
         max_length=10, choices=Difficulty.choices, blank=True
     )
-    transcript = models.TextField(blank=True, default="")  # source transcript; [seconds]-tagged for YouTube captions
+    transcript = models.TextField(blank=True, default="")  # [seconds]-tagged caption transcript; set for YouTube-caption recipes only
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
