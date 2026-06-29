@@ -53,6 +53,19 @@ def test_recipe_view_renders_jump_chips(auth_client, user):
     assert b'id="yt-player"' in body
 
 
+def test_recipe_view_handles_legacy_string_instructions(auth_client, user):
+    # Older recipes stored instructions as plain strings, not dicts.
+    r = Recipe.objects.create(
+        owner=user, title="Old", instructions=["Just stir well"]
+    )
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert resp.status_code == 200
+    steps = resp.context["steps"]
+    assert steps[0]["text"] == "Just stir well"
+    assert steps[0]["start"] is None
+    assert b"Just stir well" in resp.content
+
+
 def test_recipe_view_without_video_has_no_chip_or_player(auth_client, user):
     r = Recipe.objects.create(
         owner=user, title="Plain", instructions=[{"step": 1, "text": "Stir well"}]

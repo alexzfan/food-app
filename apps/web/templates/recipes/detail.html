@@ -52,7 +52,20 @@
   <div class="rv-grid">
     <div class="rv-left">
       {% if recipe.youtube_video_id %}
-      <div class="rv-video"><div id="yt-player"></div></div>
+      {# Render the iframe ourselves with referrerpolicy set: Django's default
+         same-origin Referrer-Policy strips the Referer on the cross-origin embed
+         request, which trips YouTube error 153. enablejsapi=1 lets the IFrame
+         API attach to this element for tap-to-seek without building its own
+         (referrerpolicy-less) iframe. #}
+      <div class="rv-video">
+        <iframe id="yt-player"
+                src="https://www.youtube.com/embed/{{ recipe.youtube_video_id }}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
+                title="{{ recipe.title }}"
+                frameborder="0"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+      </div>
       {% endif %}
       <div class="rv-credit">
         <span class="rv-credit__avatar"></span>
@@ -91,7 +104,12 @@
       </div>
       <div class="rv-steps">
         {% for step in steps %}
-        <div class="rv-step" :class="{ 'rv-step--active': active === {{ forloop.counter0 }} }" @click="onStep({{ forloop.counter0 }})">
+        <div class="rv-step" :class="{ 'rv-step--active': active === {{ forloop.counter0 }} }"
+             role="button" tabindex="0"
+             :aria-pressed="active === {{ forloop.counter0 }}"
+             @click="onStep({{ forloop.counter0 }})"
+             @keydown.enter.prevent="onStep({{ forloop.counter0 }})"
+             @keydown.space.prevent="onStep({{ forloop.counter0 }})">
           <span class="rv-step__num" :class="{ 'rv-step__num--active': active === {{ forloop.counter0 }} }">{{ step.number }}</span>
           <div class="rv-step__body">
             <p class="rv-step__text">{{ step.text }}</p>
@@ -118,7 +136,13 @@ function recipeView() {
     hasVideo: !!data.videoId,
     active: null, cooking: false, shared: false,
     player: null, _timer: null, _poll: null, _sh: null,
-    init() { if (this.hasVideo) this.loadPlayer(); },
+    init() {
+      if (this.hasVideo) this.loadPlayer();
+      // Full-page nav doesn't run an Alpine destroy hook; clear our intervals
+      // on unload so they don't leak if this view is ever htmx-swapped.
+      window.addEventListener('pagehide', () => this.teardown(), { once: true });
+    },
+    teardown() { clearInterval(this._timer); clearInterval(this._poll); },
     loadPlayer() {
       const make = () => this.createPlayer();
       if (window.YT && window.YT.Player) { make(); return; }
@@ -134,19 +158,26 @@ function recipeView() {
     },
     createPlayer() {
       if (this.player) return;
+      // Attach to the existing server-rendered #yt-player iframe (it carries
+      // enablejsapi=1 + referrerpolicy). Letting YT.Player build its own iframe
+      // would drop the referrerpolicy and trip YouTube error 153.
       this.player = new YT.Player('yt-player', {
-        videoId: this.videoId,
-        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
-        width: '100%', height: '100%',
+        events: {
+          onReady: () => { this._timer = setInterval(() => this.tick(), 500); },
+        },
       });
-      this._timer = setInterval(() => this.tick(), 500);
     },
     tick() {
       if (!this.player || !this.player.getPlayerState) return;
       if (this.player.getPlayerState() !== 1) return;
       const t = this.player.getCurrentTime();
-      let idx = null;
-      this.starts.forEach((s, i) => { if (s != null && s <= t + 0.4) idx = i; });
+      // Highlight the step with the latest start at or before the playhead.
+      // Compare by start value, not array order, so a non-monotonic LLM
+      // ordering can't mishighlight.
+      let idx = null, best = -1;
+      this.starts.forEach((s, i) => {
+        if (s != null && s <= t + 0.4 && s > best) { best = s; idx = i; }
+      });
       if (idx != null && idx !== this.active) this.active = idx;
     },
     seek(sec) {
@@ -162,9 +193,27 @@ function recipeView() {
     next() { const n = Math.min((this.active == null ? 0 : this.active) + 1, this.starts.length - 1); this.onStep(n); },
     prev() { const n = Math.max((this.active == null ? 0 : this.active) - 1, 0); this.onStep(n); },
     share() {
-      if (navigator.clipboard) navigator.clipboard.writeText(location.href);
-      this.shared = true; clearTimeout(this._sh);
-      this._sh = setTimeout(() => { this.shared = false; }, 1800);
+      const url = location.href;
+      // Only flash "Link copied" after a copy actually succeeds — clipboard
+      // is unavailable in insecure contexts / older browsers.
+      const ok = () => {
+        this.shared = true; clearTimeout(this._sh);
+        this._sh = setTimeout(() => { this.shared = false; }, 1800);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(ok, () => this.legacyCopy(url, ok));
+      } else {
+        this.legacyCopy(url, ok);
+      }
+    },
+    legacyCopy(text, ok) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      let copied = false;
+      try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+      document.body.removeChild(ta);
+      if (copied) ok();
     },
   };
 }
