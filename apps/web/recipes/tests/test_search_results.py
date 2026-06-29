@@ -99,6 +99,18 @@ def test_search_stored_in_session_recents(auth_client):
     assert auth_client.session["recent_searches"] == ["cacio e pepe"]
 
 
+def test_repeat_search_served_from_cache(auth_client):
+    with patch(
+        "recipes.views.youtube.search_recipe_videos",
+        return_value={"videos": [_video("aaa")], "next_page_token": None},
+    ) as mock:
+        first = auth_client.get("/youtube/search/", {"q": "pasta"})
+        second = auth_client.get("/youtube/search/", {"q": "pasta"})
+    assert b"Title aaa" in first.content
+    assert b"Title aaa" in second.content
+    assert mock.call_count == 1  # second request served from the DB cache
+
+
 def test_save_button_context_returns_save_partial(auth_client, user):
     r = Recipe.objects.create(owner=user, youtube_video_id="aaa", title="X")
     resp = auth_client.post(f"/recipes/{r.id}/favorite/", {"context": "search"})
