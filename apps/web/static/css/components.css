@@ -332,7 +332,13 @@
 .rv-toast { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; padding: 9px 14px; border-radius: var(--r-pill); background: var(--ink); color: var(--paper); font-size: 12.5px; font-weight: 600; }
 
 .rv-grid { display: grid; grid-template-columns: 460px 1fr; gap: 38px; margin-top: 32px; align-items: start; }
-.rv-left { position: sticky; top: 20px; }
+/* Each column is pinned and capped to the viewport; the video/credit/head
+   stay fixed-size while the ingredient/step list flexes into the leftover
+   space and scrolls there (min-height:0 lets the flex item shrink below its
+   content so overflow actually engages). Sizing the *column* -- not the panel
+   -- keeps it viewport-agnostic to the video height above the list. */
+.rv-left, .rv-right { position: sticky; top: 20px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; }
+.rv-video, .rv-credit, .rv-ings__head, .rv-method__head { flex: 0 0 auto; }
 .rv-video { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r-md); overflow: hidden; background: #0c0a08; box-shadow: var(--shadow-1); border: 1px solid var(--line); }
 .rv-video #yt-player, .rv-video iframe { width: 100%; height: 100%; border: 0; }
 .rv-credit { display: flex; align-items: center; gap: 11px; margin: 14px 0 26px; }
@@ -344,7 +350,7 @@
 .rv-ings__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .rv-h3 { font-family: var(--font-display); font-weight: 600; font-size: 22px; margin: 0; color: var(--ink); }
 .rv-serves { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; color: var(--ink-2); border: 1px solid var(--line-2); border-radius: var(--r-pill); background: var(--surface); padding: 6px 12px; }
-.rv-ings { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 4px 16px; box-shadow: var(--shadow-1); max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-gutter: stable; }
+.rv-ings { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 4px 16px; box-shadow: var(--shadow-1); flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
 .rv-ing { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
 .rv-ing:last-child { border-bottom: 0; }
 .rv-ing__check { width: 18px; height: 18px; accent-color: var(--accent); flex: 0 0 auto; }
@@ -353,10 +359,9 @@
 .rv-ing__check:checked ~ .rv-ing__amount { color: var(--muted); }
 .rv-ing__check:checked ~ .rv-ing__name { text-decoration: line-through; color: var(--muted); }
 
-.rv-right { position: sticky; top: 20px; }
 .rv-method__head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
 .rv-method__hint { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; color: var(--muted); }
-.rv-steps { display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 110px); overflow-y: auto; scrollbar-gutter: stable; padding-right: 8px; }
+.rv-steps { display: flex; flex-direction: column; gap: 12px; flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; padding-right: 8px; }
 .rv-step { display: flex; gap: 16px; padding: 16px 18px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
 .rv-step--active { border-color: var(--accent-line); background: var(--accent-soft); box-shadow: var(--shadow-1); }
 .rv-step__num { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); color: var(--on-soft); display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 17px; font-weight: 600; }
@@ -373,9 +378,8 @@
   .rv-actions__default .rv-btn, .rv-actions form { flex: 1; }
   .rv-btn { width: 100%; }
   .rv-grid { grid-template-columns: 1fr; gap: 24px; }
-  .rv-left { position: static; }
-  .rv-right { position: static; }
-  .rv-steps { max-height: none; overflow-y: visible; padding-right: 0; }
-  .rv-ings { max-height: none; overflow-y: visible; }
+  .rv-left, .rv-right { position: static; max-height: none; display: block; }
+  .rv-steps { overflow-y: visible; padding-right: 0; }
+  .rv-ings { overflow-y: visible; }
   .rv-title { font-size: 32px; }
 }

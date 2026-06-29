@@ -76,3 +76,47 @@ def test_recipe_view_without_video_has_no_chip_or_player(auth_client, user):
     assert b"Stir well" in body
     assert b"JUMP TO" not in body
     assert b'id="yt-player"' not in body
+
+
+def test_recipe_view_omits_credit_when_no_channel_or_video(auth_client, user):
+    # No channel and no video must not render a stub "Unknown channel" credit.
+    r = Recipe.objects.create(
+        owner=user, title="Plain", instructions=[{"step": 1, "text": "Stir"}]
+    )
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert b"Unknown channel" not in resp.content
+    assert b"rv-credit" not in resp.content
+
+
+def test_recipe_view_credits_channel_name(auth_client, user):
+    r = Recipe.objects.create(
+        owner=user, title="Garlic Noodles", youtube_video_id="abc123",
+        channel_name="Pasta Grannies",
+        instructions=[{"step": 1, "text": "Boil"}],
+    )
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert b"Pasta Grannies" in resp.content
+    assert b"Unknown channel" not in resp.content
+
+
+def test_recipe_view_does_not_leak_iframe_template_comment(auth_client, user):
+    # A multi-line {# #} comment is not recognized by Django and leaks onto the
+    # page as literal text; the iframe note must be a {% comment %} block.
+    r = Recipe.objects.create(
+        owner=user, title="Garlic Noodles", youtube_video_id="abc123",
+        instructions=[{"step": 1, "text": "Boil"}],
+    )
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert b"SECURE_REFERRER_POLICY" not in resp.content
+    assert b"belt-and-suspenders" not in resp.content
+
+
+def test_recipe_view_sends_referrer_policy_for_youtube_embed(auth_client, user):
+    # Django's "same-origin" default strips the Referer on the cross-origin
+    # YouTube embed and trips error 153; the app sends the origin instead.
+    r = Recipe.objects.create(
+        owner=user, title="Garlic Noodles", youtube_video_id="abc123",
+        instructions=[{"step": 1, "text": "Boil"}],
+    )
+    resp = auth_client.get(f"/recipes/{r.id}/")
+    assert resp.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
