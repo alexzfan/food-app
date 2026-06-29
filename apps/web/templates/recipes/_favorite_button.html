@@ -1,5 +1,8 @@
 <form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="this" hx-swap="outerHTML">
   {% csrf_token %}
   <input type="hidden" name="context" value="detail">
-  <button type="submit">{% if recipe.is_favorite %}Unfavorite{% else %}Favorite{% endif %}</button>
+  <button type="submit" class="rv-btn rv-btn--{% if recipe.is_favorite %}fav{% else %}secondary{% endif %}">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if recipe.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+    {% if recipe.is_favorite %}Saved{% else %}Save recipe{% endif %}
+  </button>
 </form>

@@ -1,16 +1,172 @@
 {% extends "base.html" %}
 {% block title %}{{ recipe.title }}{% endblock %}
 {% block content %}
-<h1>{{ recipe.title }}</h1>
-<p>{{ recipe.description }}</p>
-{% if recipe.youtube_video_id %}
-<iframe width="320" height="180" src="https://www.youtube.com/embed/{{ recipe.youtube_video_id }}"
-        frameborder="0" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-{% endif %}
-<h2>Ingredients</h2>
-<ul>{% for i in recipe.ingredients %}<li>{{ i.amount }} {{ i.unit }} {{ i.name }}{% if i.notes %} ({{ i.notes }}){% endif %}</li>{% endfor %}</ul>
-<h2>Instructions</h2>
-<ol>{% for s in recipe.instructions %}<li>{{ s.text }}{% if s.duration %} — {{ s.duration }}{% endif %}</li>{% endfor %}</ol>
-{% include "recipes/_favorite_button.html" with recipe=recipe %}
-<form hx-post="{% url 'delete_recipe' recipe.id %}">{% csrf_token %}<button type="submit">Delete</button></form>
+{{ rv_data|json_script:"rv-data" }}
+<div class="recipe-view" x-data="recipeView()" x-init="init()">
+
+  <a class="rv-back" href="{% url 'discover' %}">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    BACK TO RESULTS
+  </a>
+
+  <div class="rv-header">
+    <div class="rv-header__main">
+      <div class="rv-badges">
+        <span class="rv-badge rv-badge--ai">AI EXTRACTED</span>
+        {% if recipe.channel_name %}<span class="rv-badge rv-badge--source">{{ recipe.channel_name }}</span>{% endif %}
+      </div>
+      <h1 class="rv-title">{{ recipe.title }}</h1>
+      {% if recipe.description %}<p class="rv-desc">{{ recipe.description }}</p>{% endif %}
+      <div class="rv-meta">
+        {% if recipe.cook_time_minutes %}<span class="rv-meta__item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>{{ recipe.cook_time_minutes }} MIN</span>{% endif %}
+        {% if recipe.servings %}<span class="rv-meta__item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>SERVES {{ recipe.servings }}</span>{% endif %}
+        {% if recipe.difficulty %}<span class="rv-meta__item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>{{ recipe.difficulty|upper }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="rv-actions">
+      <div class="rv-actions__default" x-show="!cooking">
+        <button class="rv-btn rv-btn--primary" @click="startCooking()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>
+          Start cooking
+        </button>
+        {% include "recipes/_favorite_button.html" with recipe=recipe %}
+        <button class="rv-btn rv-btn--secondary" @click="share()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"></line></svg>
+          Share
+        </button>
+        <div class="rv-toast" x-show="shared" x-cloak>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Link copied
+        </div>
+      </div>
+      <div class="rv-cookbar" x-show="cooking" x-cloak>
+        <span class="rv-cookbar__label" x-text="'STEP ' + ((active == null ? 0 : active) + 1) + ' OF ' + {{ steps|length }}"></span>
+        <button class="rv-cook-btn" @click="prev()" aria-label="Previous step"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <button class="rv-cook-btn rv-cook-btn--next" @click="next()" aria-label="Next step"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+        <button class="rv-cook-btn rv-cook-btn--exit" @click="exitCook()" aria-label="Exit cooking mode"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rv-grid">
+    <div class="rv-left">
+      {% if recipe.youtube_video_id %}
+      <div class="rv-video"><div id="yt-player"></div></div>
+      {% endif %}
+      <div class="rv-credit">
+        <span class="rv-credit__avatar"></span>
+        <div class="rv-credit__meta">
+          <div class="rv-credit__name">{{ recipe.channel_name|default:"Unknown channel" }}</div>
+        </div>
+        {% if recipe.youtube_video_id %}
+        <a class="rv-credit__yt" href="https://www.youtube.com/watch?v={{ recipe.youtube_video_id }}" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FF0000"><path d="M21.6 7.2s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C15.8 4.1 12 4.1 12 4.1s-3.8 0-6.7.2c-.4.1-1.3.1-2.1.9-.6.6-.8 2-.8 2S2.1 8.8 2.1 10.5v1.6c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.8.8 1.8.8 2.3.9 1.7.2 6.6.2 6.6.2s3.8 0 6.7-.2c.4-.1 1.3-.1 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.6c0-1.6-.2-3.3-.2-3.3zM9.9 14.3V8.6l5 2.9-5 2.8z"></path></svg>
+          YouTube
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="rv-ings__head">
+        <h3 class="rv-h3">Ingredients</h3>
+        {% if recipe.servings %}<span class="rv-serves">SERVES {{ recipe.servings }}</span>{% endif %}
+      </div>
+      <div class="rv-ings">
+        {% for ing in recipe.ingredients %}
+        <label class="rv-ing">
+          <input type="checkbox" class="rv-ing__check">
+          <span class="rv-ing__amount">{{ ing.amount }}{% if ing.unit %} {{ ing.unit }}{% endif %}</span>
+          <span class="rv-ing__name">{{ ing.name }}{% if ing.notes %}, {{ ing.notes }}{% endif %}</span>
+        </label>
+        {% empty %}
+        <div class="rv-ing"><span class="rv-ing__name">No ingredients listed.</span></div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rv-right">
+      <div class="rv-method__head">
+        <h3 class="rv-h3">Method</h3>
+        {% if recipe.youtube_video_id %}<span class="rv-method__hint">TAP A STEP TO JUMP THE VIDEO</span>{% endif %}
+      </div>
+      <div class="rv-steps">
+        {% for step in steps %}
+        <div class="rv-step" :class="{ 'rv-step--active': active === {{ forloop.counter0 }} }" @click="onStep({{ forloop.counter0 }})">
+          <span class="rv-step__num" :class="{ 'rv-step__num--active': active === {{ forloop.counter0 }} }">{{ step.number }}</span>
+          <div class="rv-step__body">
+            <p class="rv-step__text">{{ step.text }}</p>
+            {% if recipe.youtube_video_id and step.start is not None %}
+            <span class="rv-chip" :class="{ 'rv-chip--active': active === {{ forloop.counter0 }} }">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+              <span x-text="active === {{ forloop.counter0 }} ? 'PLAYING · {{ step.start_display }}' : 'JUMP TO {{ step.start_display }}'">JUMP TO {{ step.start_display }}</span>
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function recipeView() {
+  const data = JSON.parse(document.getElementById('rv-data').textContent);
+  return {
+    starts: data.steps,
+    videoId: data.videoId,
+    hasVideo: !!data.videoId,
+    active: null, cooking: false, shared: false,
+    player: null, _timer: null, _poll: null, _sh: null,
+    init() { if (this.hasVideo) this.loadPlayer(); },
+    loadPlayer() {
+      const make = () => this.createPlayer();
+      if (window.YT && window.YT.Player) { make(); return; }
+      if (!window._ytApiLoading) {
+        window._ytApiLoading = true;
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+      }
+      this._poll = setInterval(() => {
+        if (window.YT && window.YT.Player) { clearInterval(this._poll); make(); }
+      }, 200);
+    },
+    createPlayer() {
+      if (this.player) return;
+      this.player = new YT.Player('yt-player', {
+        videoId: this.videoId,
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        width: '100%', height: '100%',
+      });
+      this._timer = setInterval(() => this.tick(), 500);
+    },
+    tick() {
+      if (!this.player || !this.player.getPlayerState) return;
+      if (this.player.getPlayerState() !== 1) return;
+      const t = this.player.getCurrentTime();
+      let idx = null;
+      this.starts.forEach((s, i) => { if (s != null && s <= t + 0.4) idx = i; });
+      if (idx != null && idx !== this.active) this.active = idx;
+    },
+    seek(sec) {
+      if (this.player && this.player.seekTo) { this.player.seekTo(sec, true); this.player.playVideo(); }
+    },
+    onStep(i) {
+      this.active = i;
+      const s = this.starts[i];
+      if (this.hasVideo && s != null) this.seek(s);
+    },
+    startCooking() { this.cooking = true; this.onStep(0); },
+    exitCook() { this.cooking = false; },
+    next() { const n = Math.min((this.active == null ? 0 : this.active) + 1, this.starts.length - 1); this.onStep(n); },
+    prev() { const n = Math.max((this.active == null ? 0 : this.active) - 1, 0); this.onStep(n); },
+    share() {
+      if (navigator.clipboard) navigator.clipboard.writeText(location.href);
+      this.shared = true; clearTimeout(this._sh);
+      this._sh = setTimeout(() => { this.shared = false; }, 1800);
+    },
+  };
+}
+</script>
 {% endblock %}
