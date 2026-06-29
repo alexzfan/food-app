@@ -29,13 +29,23 @@ def _coerce_start(value):
 
 def parse_recipe_response(text: str) -> dict:
     s = text.strip()
+    if not s:
+        raise ValueError("model returned an empty response")
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", s)
     if fence:
         s = fence.group(1)
     obj = re.search(r"\{[\s\S]*\}", s)
     if obj:
         s = obj.group(0)
-    recipe = json.loads(s)
+    # No complete {...} object: the model returned prose or was cut off before
+    # the JSON. Surface that with a snippet instead of a cryptic
+    # "Expecting value: line 1 column 1 (char 0)" from json.loads below.
+    if not s.lstrip().startswith("{"):
+        raise ValueError(f"model did not return a JSON object; got: {text.strip()[:200]!r}")
+    try:
+        recipe = json.loads(s)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"model returned malformed JSON ({e}); got: {s[:200]!r}") from e
     if not recipe.get("title"):
         raise ValueError("Missing required field: title")
     recipe.setdefault("ingredients", [])
@@ -92,7 +102,17 @@ class HostedExtractor:
             timeout=180,
         )
         resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"]
+        choice = resp.json()["choices"][0]
+        # finish_reason="length" means generation hit the context/token cap and
+        # the JSON is cut off mid-stream. Flag the real cause instead of letting
+        # the truncated body fail downstream as an opaque JSON parse error.
+        if choice.get("finish_reason") == "length":
+            raise ValueError(
+                "model response truncated at the context/token limit -- the "
+                "transcript is likely too long for the context window; raise "
+                "LLAMACPP_CTX (or shorten the transcript)"
+            )
+        content = choice["message"]["content"]
         return parse_recipe_response(content)
 
 
