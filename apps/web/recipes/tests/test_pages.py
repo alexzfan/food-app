@@ -55,8 +55,8 @@ def test_detail_favorite_returns_button_not_card(auth_client, user):
     r = Recipe.objects.create(owner=user, title="Pasta")
     resp = auth_client.post(f"/recipes/{r.id}/favorite/", {"context": "detail"})
     assert Favorite.objects.filter(user=user, recipe=r).exists()
-    # detail context swaps the button (shows "Unfavorite"), not a list card link
-    assert b"Unfavorite" in resp.content
+    # detail context swaps the styled Save button (now reads "Saved"), not a card link
+    assert b"Saved" in resp.content
     assert f'href="/recipes/{r.id}/"'.encode() not in resp.content
 
 

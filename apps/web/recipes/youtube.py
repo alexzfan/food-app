@@ -134,7 +134,12 @@ def fetch_transcript(video_id):
     """
     try:
         fetched = YouTubeTranscriptApi().fetch(video_id)
-        text = " ".join(snippet.text for snippet in fetched).strip()
+        lines = [
+            f"[{int(snippet.start)}] {snippet.text.strip()}"
+            for snippet in fetched
+            if snippet.text and snippet.text.strip()
+        ]
+        text = "\n".join(lines).strip()
         if not text:
             logger.info("fetch_transcript: empty transcript for %s", video_id)
         return text or None

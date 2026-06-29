@@ -65,6 +65,14 @@ def _remember_search(request, query):
     request.session["recent_searches"] = recents[:6]
 
 
+def _mmss(seconds):
+    """Whole seconds -> "m:ss" display, or "" for None. e.g. 135 -> "2:15"."""
+    if seconds is None:
+        return ""
+    seconds = int(seconds)
+    return f"{seconds // 60}:{seconds % 60:02d}"
+
+
 @login_required
 @onboarding_required
 def discover(request):
@@ -231,7 +239,24 @@ def recipe_detail(request, pk):
     recipe.is_favorite = Favorite.objects.filter(
         user=request.user, recipe=recipe
     ).exists()
-    return render(request, "recipes/detail.html", {"recipe": recipe})
+
+    steps, starts = [], []
+    for i, step in enumerate(recipe.instructions, start=1):
+        start = step.get("start") if isinstance(step, dict) else None
+        if isinstance(start, bool) or not isinstance(start, int):
+            start = None
+        text = step.get("text", "") if isinstance(step, dict) else str(step)
+        steps.append(
+            {"number": i, "text": text, "start": start, "start_display": _mmss(start)}
+        )
+        starts.append(start)
+
+    rv_data = {"videoId": recipe.youtube_video_id, "steps": starts}
+    return render(
+        request,
+        "recipes/detail.html",
+        {"recipe": recipe, "steps": steps, "rv_data": rv_data},
+    )
 
 
 @login_required

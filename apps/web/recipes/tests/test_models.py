@@ -35,3 +35,8 @@ def test_extraction_job_starts_queued(user):
 
 def test_youtube_captions_source_exists():
     assert ExtractionJob.Source.YOUTUBE_CAPTIONS == "youtube_captions"
+
+
+def test_recipe_transcript_defaults_blank(user):
+    r = Recipe.objects.create(owner=user, title="Pasta")
+    assert r.transcript == ""
