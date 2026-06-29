@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.views import onboarding_required
 
-from . import youtube
+from . import search_cache, youtube
 from .models import ExtractionJob, Favorite, Recipe
 from .tasks import run_extraction_job
 
@@ -101,7 +101,9 @@ def youtube_search(request):
     total = 0
     if query:
         try:
-            videos = youtube.search_recipe_videos(query)["videos"]
+            videos = search_cache.search_with_cache(
+                query, lambda: youtube.search_recipe_videos(query)
+            )
         except Exception:
             error = "Search failed. Try again."
         total = len(videos)

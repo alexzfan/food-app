@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -88,6 +89,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # External services
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
+# How long a cached YouTube search stays fresh before we re-hit the API.
+YOUTUBE_SEARCH_TTL = timedelta(
+    hours=int(os.environ.get("YOUTUBE_SEARCH_TTL_HOURS", "24"))
+)
+# Shorter window when enrichment (duration/views) failed, so the hole re-fills soon.
+YOUTUBE_SEARCH_UNENRICHED_TTL = timedelta(
+    minutes=int(os.environ.get("YOUTUBE_SEARCH_UNENRICHED_TTL_MINUTES", "30"))
+)
+# Prune cached searches/videos older than this (keeps the cache tables flat).
+YOUTUBE_SEARCH_PRUNE_AGE = timedelta(
+    days=int(os.environ.get("YOUTUBE_SEARCH_PRUNE_DAYS", "30"))
+)
 ML_SERVICE_URL = os.environ.get("ML_SERVICE_URL", "http://localhost:8001")
 MAX_DURATION_SECONDS = int(os.environ.get("MAX_DURATION_SECONDS", "900"))
 

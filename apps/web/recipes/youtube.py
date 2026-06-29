@@ -24,6 +24,17 @@ TRANSIENT_TRANSCRIPT_ERRORS = (RequestBlocked, IpBlocked, YouTubeRequestFailed)
 _ISO_DURATION = re.compile(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
 
 
+def seconds_to_display(total):
+    """Total seconds -> display string e.g. 522 -> "8:42", None -> ""."""
+    if total is None:
+        return ""
+    hours, rem = divmod(total, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if hours:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    return f"{minutes}:{seconds:02d}"
+
+
 def _format_duration(iso):
     """ISO-8601 video duration -> (total_seconds, display) e.g. (522, "8:42")."""
     if not iso:
@@ -33,9 +44,7 @@ def _format_duration(iso):
         return None, ""
     hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
     total = hours * 3600 + minutes * 60 + seconds
-    if hours:
-        return total, f"{hours}:{minutes:02d}:{seconds:02d}"
-    return total, f"{minutes}:{seconds:02d}"
+    return total, seconds_to_display(total)
 
 
 def _format_views(count):

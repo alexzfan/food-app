@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from .youtube import _format_views, seconds_to_display
+
 
 class Recipe(models.Model):
     class Difficulty(models.TextChoices):
@@ -34,6 +36,70 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Video(models.Model):
+    """Canonical, deduplicated YouTube video metadata for the search cache.
+
+    Display fields (duration/views) are derived, not stored, to stay
+    normalized. Rows are upserted on every search that returns the video and
+    referenced by SearchResult; see [[search_cache]].
+    """
+    video_id = models.CharField(max_length=32, primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    thumbnail_url = models.URLField(blank=True)
+    channel_id = models.CharField(max_length=64, blank=True)
+    channel_title = models.CharField(max_length=255, blank=True)
+    duration_seconds = models.PositiveIntegerField(null=True, blank=True)
+    view_count = models.BigIntegerField(null=True, blank=True)
+    has_captions = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["updated_at"])]
+
+    def __str__(self):
+        return f"{self.video_id} {self.title}"
+
+    @property
+    def duration_display(self):
+        return seconds_to_display(self.duration_seconds)
+
+    @property
+    def view_count_display(self):
+        return _format_views(self.view_count)
+
+
+class SearchQuery(models.Model):
+    """One normalized search string; anchors the TTL for its cached results."""
+    query = models.CharField(max_length=255, unique=True)
+    fully_enriched = models.BooleanField(default=True)
+    fetched_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["fetched_at"])]
+
+    def __str__(self):
+        return self.query
+
+
+class SearchResult(models.Model):
+    """Ordered join: which videos a query returned, and in what position."""
+    query = models.ForeignKey(
+        SearchQuery, on_delete=models.CASCADE, related_name="results"
+    )
+    video = models.ForeignKey(
+        Video, on_delete=models.CASCADE, related_name="appearances"
+    )
+    rank = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = ("query", "video")
+        ordering = ["rank"]
+        indexes = [models.Index(fields=["query", "rank"])]
 
 
 class Favorite(models.Model):
