@@ -19,7 +19,7 @@ class Recipe(models.Model):
     thumbnail_url = models.URLField(blank=True)
     channel_name = models.CharField(max_length=255, blank=True)
     ingredients = models.JSONField(default=list)   # [{name, amount, unit?, notes?}]
-    instructions = models.JSONField(default=list)  # [{step, text, duration?}]
+    instructions = models.JSONField(default=list)  # [{step, text, start?, duration?}]
     tags = models.JSONField(default=list)          # [str]
     cuisine = models.CharField(max_length=100, blank=True)
     cook_time_minutes = models.PositiveIntegerField(null=True, blank=True)
@@ -28,6 +28,7 @@ class Recipe(models.Model):
     difficulty = models.CharField(
         max_length=10, choices=Difficulty.choices, blank=True
     )
+    transcript = models.TextField(blank=True, default="")  # source transcript; [seconds]-tagged for YouTube captions
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

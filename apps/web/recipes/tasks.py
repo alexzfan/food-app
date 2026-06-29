@@ -29,6 +29,7 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
         recipe = Recipe.objects.create(
             owner=job.owner,
             youtube_video_id=job.youtube_video_id,
+            transcript=transcript or "",
             title=summary["title"],
             description=summary.get("description", ""),
             ingredients=summary.get("ingredients", []),

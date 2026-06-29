@@ -31,6 +31,17 @@ def test_paste_transcript_skips_whisper_and_creates_recipe(user):
     assert Recipe.objects.get(pk=job.recipe_id).title == "Pasta"
 
 
+def test_extraction_stores_transcript(user):
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.PASTE_TRANSCRIPT, title="Pasta"
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="[0] boil pasta")
+    job.refresh_from_db()
+    assert Recipe.objects.get(pk=job.recipe_id).transcript == "[0] boil pasta"
+
+
 def test_failure_marks_job_failed(user):
     job = ExtractionJob.objects.create(
         owner=user, source=ExtractionJob.Source.PASTE_TRANSCRIPT
