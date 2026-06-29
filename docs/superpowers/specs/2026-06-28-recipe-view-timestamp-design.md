@@ -87,12 +87,18 @@ Start times are **best-effort and nullable** throughout, so non-YouTube sources
   whether from captions or `ml_client.transcribe`.)
 
 ### `recipes/views.py`
+- Add a small module-level helper `_mmss(seconds) -> str` (e.g. `135 → "2:15"`,
+  `None → ""`). We do **not** reuse `youtube.seconds_to_display`: that function
+  exists only on the unmerged cache branch, not on `main`, and there is no
+  seconds→display helper on `main` (only `_format_duration`, which takes an ISO
+  string).
 - `recipe_detail`: build a `steps` context list of
-  `{number, text, start, start_display}` where `start_display` uses the existing
-  `youtube.seconds_to_display`. Best-effort look up the `Video` row by
-  `recipe.youtube_video_id` for the credit line (`view_count_display`,
-  `duration_display`, `channel_title`); tolerate its absence. Pass `recipe`,
-  `steps`, `video` (or None), and `is_favorite` (already set).
+  `{number, text, start, start_display}` where `start_display = _mmss(start)`.
+  Pass `recipe`, `steps`, and `is_favorite` (already set).
+- The credit line shows `recipe.channel_name` + a YouTube watch link only. View
+  count / duration are **not** rendered — they are not stored on `Recipe` (the
+  `Video` cache model is on a separate, unmerged branch). Avatar is a styled
+  placeholder, matching the mockup.
 
 ## Templates
 
@@ -107,8 +113,9 @@ Structure:
   **Share** (copy link). In cooking mode this row becomes the step bar
   ("STEP n OF N", Prev/Next/exit).
 - Left column: video container `#yt-player`; channel credit (avatar placeholder,
-  name, `views · duration`, YouTube watch link); Ingredients card (header +
-  static "SERVES N"; rows with a client-side checkbox).
+  name `recipe.channel_name`, YouTube watch link); Ingredients card (header +
+  static "SERVES N"; rows with a client-side checkbox). (Views/duration are
+  omitted — not stored on `Recipe`; see the views section.)
 - Right column: **Method** — `steps` rendered as rows; each row shows the step
   number disc, text, and (when `start` is not null **and** a video exists) a
   "JUMP TO m:ss" chip. Active step shows "PLAYING · m:ss" and accent styling.
@@ -142,7 +149,7 @@ method step rows (default/active), step number disc, jump/playing chip,
 | No `youtube_video_id` | No player; no jump chips; cooking mode walks text only |
 | Instruction `start` is null | That step: no chip, no seek on click |
 | Recipe extracted before this change | All `start` null → behaves as no-timestamp |
-| `Video` row missing for credit | Credit shows name only (from `Recipe.channel_name`); views/duration omitted |
+| No view count / duration on Recipe | Credit shows channel name + watch link only |
 
 ## Tests
 
@@ -166,3 +173,8 @@ method step rows (default/active), step number disc, jump/playing chip,
   page is fully usable without it (static steps, watch-on-YouTube link).
 - Persisting transcripts grows row size; transcripts are text and bounded by
   video length — acceptable.
+- **Migration numbering:** `main` is at migration `0002`, so this feature adds
+  `0003_recipe_transcript`. The unmerged cache branch also adds a `0003_*`
+  migration; whichever lands second will need `manage.py makemigrations --merge`
+  to reconcile the two `0003` leaves. Expected and standard for parallel
+  branches — not a blocker.
