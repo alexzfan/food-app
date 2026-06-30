@@ -149,3 +149,21 @@ def test_extract_endpoint_logs_cause_on_failure(caplog):
     assert any(
         "extract failed" in r.getMessage() and r.exc_info for r in caplog.records
     )
+
+
+def test_parse_normalizes_meal_type_and_dietary():
+    raw = '{"title": "T", "meal_type": "Dinner", "dietary": ["Vegan", "bogus"]}'
+    out = parse_recipe_response(raw)
+    assert out["meal_type"] == "dinner"
+    assert out["dietary"] == ["vegan"]
+
+
+def test_parse_defaults_meal_and_dietary_when_missing():
+    out = parse_recipe_response('{"title": "T"}')
+    assert out["meal_type"] == ""
+    assert out["dietary"] == []
+
+
+def test_parse_drops_unknown_meal_type():
+    out = parse_recipe_response('{"title": "T", "meal_type": "brunch"}')
+    assert out["meal_type"] == ""
