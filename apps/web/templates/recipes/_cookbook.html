@@ -23,6 +23,11 @@
   </div>
 </div>
 
+<form class="cooksearch" hx-get="{% url 'saved' %}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true" hx-trigger="keyup changed delay:400ms, submit" style="margin-bottom:16px;">
+  <input type="search" name="q" value="{{ q }}" class="cooksearch__input" placeholder="Search a dish, ingredient, or creator…" aria-label="Search your cookbook">
+  {% for k, v in preserved_params %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+</form>
+
 <div class="toolbar" style="margin-bottom:18px;">
   {% for group in facet_groups %}
   <div style="position:relative;" x-data="{ open: false }">
@@ -66,7 +71,7 @@
     <div class="eicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></div>
     <h3 class="htitle" style="font-size:24px;">Nothing matches</h3>
     <p style="color:var(--ink-2); margin:8px 0 20px;">No saved recipes fit those filters.</p>
-    <a class="ebtn ghost" href="?{{ clear_url }}" hx-get="?{{ clear_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Clear all filters</a>
+    <a class="ebtn ghost" href="?{{ reset_url }}" hx-get="?{{ reset_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Clear all filters</a>
   </div>
 {% else %}
   <div class="empty">

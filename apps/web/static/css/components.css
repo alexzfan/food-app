@@ -420,4 +420,20 @@
 .cookbook .eicon { width: 70px; height: 70px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
 .cookbook .ebtn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-1); }
 .cookbook .ebtn.ghost { background: var(--surface); border: 1px solid var(--line-2); color: var(--ink); box-shadow: none; }
-[x-cloak] { display: none !important; }
+.cookbook .cooksearch__input {
+  width: 100%;
+  max-width: 420px;
+  padding: 9px 16px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+.cookbook .cooksearch__input::placeholder { color: var(--muted); }
+@media (max-width: 720px) {
+  .cookbook .grid3 { grid-template-columns: 1fr; }
+  .cookbook .lrow { flex-direction: column; }
+  .cookbook .lthumb { width: 100%; }
+}

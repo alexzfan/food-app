@@ -21,6 +21,7 @@ _DIET_KEYWORDS = {
     "vegetarian": "vegetarian", "veggie": "vegetarian",
     "gluten-free": "gluten_free", "gluten free": "gluten_free",
     "gluten_free": "gluten_free",
+    "gf": "gluten_free",
 }
 
 

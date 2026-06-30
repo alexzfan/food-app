@@ -326,6 +326,13 @@ def saved(request):
         "chips": chips,
         "clear_url": facets.clear_filters(params),
         "has_filters": bool(q or fav or any(sel.values())),
+        "preserved_params": [
+            (k, v)
+            for k, vals in params.lists()
+            for v in vals
+            if k != "q" and v != ""
+        ],
+        "reset_url": facets.clear_filters(params, keep=("sort", "view")),
     })
 
 

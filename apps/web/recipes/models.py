@@ -50,7 +50,7 @@ class Recipe(models.Model):
         if not m:
             return ""
         if m % 60 == 0:
-            return f"{m // 60} HR" if m >= 60 else f"{m} MIN"
+            return f"{m // 60} HR"
         if m > 60:
             return f"{m // 60} HR {m % 60} MIN"
         return f"{m} MIN"

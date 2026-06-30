@@ -148,3 +148,23 @@ def test_fav_toggle_in_list_view_returns_row(auth_client, user):
     )
     assert b"lrow" in resp.content
     assert f'id="recipe-{r.id}"'.encode() in resp.content
+
+
+def test_cookbook_renders_search_input(auth_client, user):
+    _mk(user, title="Garlic Noodles")
+    resp = auth_client.get("/saved/")
+    assert b'type="search"' in resp.content
+    assert b'name="q"' in resp.content
+
+
+def test_search_no_match_shows_filtered_empty_not_cold(auth_client, user):
+    _mk(user, title="Garlic Noodles")
+    resp = auth_client.get("/saved/", {"q": "zzzznomatch"})
+    assert b"Nothing matches" in resp.content
+    assert b"Nothing saved yet" not in resp.content
+
+
+def test_search_form_preserves_active_facets_as_hidden_inputs(auth_client, user):
+    _mk(user, title="Pasta", cuisine="italian")
+    resp = auth_client.get("/saved/", {"cuisine": "italian"})
+    assert b'<input type="hidden" name="cuisine" value="italian">' in resp.content
