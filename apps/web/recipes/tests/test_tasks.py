@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from django.contrib.auth import get_user_model
 
+from recipes import tasks
 from recipes.models import ExtractionJob, Recipe
 from recipes.tasks import run_extraction_job
 
@@ -65,3 +66,15 @@ def test_failure_marks_job_failed(user):
     job.refresh_from_db()
     assert job.status == ExtractionJob.Status.FAILED
     assert "boom" in job.error
+
+
+def test_run_extraction_job_maps_and_normalizes_facets(db, django_user_model, monkeypatch):
+    user = django_user_model.objects.create_user(email="t@e.com", password="supersecret")
+    job = ExtractionJob.objects.create(owner=user, source=ExtractionJob.Source.PASTE_TEXT)
+    monkeypatch.setattr(tasks.ml_client, "extract", lambda transcript, title: {
+        "title": "Soup", "meal_type": "Dinner", "dietary": ["Vegan", "bogus"],
+    })
+    tasks.run_extraction_job(job.id, transcript="some text")
+    r = Recipe.objects.get(title="Soup")
+    assert r.meal_type == "dinner"
+    assert r.dietary == ["vegan"]
