@@ -381,7 +381,10 @@ def toggle_favorite(request, pk):
     elif request.POST.get("context") == "search":
         template = "recipes/_save_button.html"
     elif request.POST.get("context") == "cookbook":
-        template = "recipes/_cookbook_card.html"
+        if request.POST.get("view") == "list":
+            template = "recipes/_cookbook_row.html"
+        else:
+            template = "recipes/_cookbook_card.html"
     else:
         template = "recipes/_recipe_card.html"
     return render(request, template, {"recipe": recipe, "view": request.POST.get("view", "grid")})

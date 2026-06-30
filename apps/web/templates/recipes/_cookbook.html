@@ -52,9 +52,15 @@
 {% endif %}
 
 {% if recipes %}
+  {% if view == 'list' %}
+  <div>
+    {% for recipe in recipes %}{% include "recipes/_cookbook_row.html" %}{% endfor %}
+  </div>
+  {% else %}
   <div class="grid3">
     {% for recipe in recipes %}{% include "recipes/_cookbook_card.html" %}{% endfor %}
   </div>
+  {% endif %}
 {% elif has_filters %}
   <div class="empty">
     <div class="eicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></div>

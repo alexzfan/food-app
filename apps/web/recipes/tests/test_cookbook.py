@@ -132,3 +132,19 @@ def test_cook_time_display():
     assert Recipe(cook_time_minutes=180).cook_time_display == "3 HR"
     assert Recipe(cook_time_minutes=90).cook_time_display == "1 HR 30 MIN"
     assert Recipe(cook_time_minutes=None).cook_time_display == ""
+
+
+def test_list_view_renders_rows_with_description(auth_client, user):
+    _mk(user, title="Garlic Noodles", description="Silky buttered noodles.")
+    resp = auth_client.get("/saved/", {"view": "list"})
+    assert b"lrow" in resp.content
+    assert b"Silky buttered noodles." in resp.content
+
+
+def test_fav_toggle_in_list_view_returns_row(auth_client, user):
+    r = _mk(user, title="Pasta")
+    resp = auth_client.post(
+        f"/recipes/{r.id}/favorite/", {"context": "cookbook", "view": "list"}
+    )
+    assert b"lrow" in resp.content
+    assert f'id="recipe-{r.id}"'.encode() in resp.content
