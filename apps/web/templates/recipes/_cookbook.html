@@ -58,13 +58,15 @@
 </div>
 {% endif %}
 
-{% if recipes %}
+{% if recipes or pending_jobs %}
   {% if view == 'list' %}
   <div>
+    {% for job in pending_jobs %}{% include "recipes/_cookbook_pending_row.html" %}{% endfor %}
     {% for recipe in recipes %}{% include "recipes/_cookbook_row.html" %}{% endfor %}
   </div>
   {% else %}
   <div class="grid3">
+    {% for job in pending_jobs %}{% include "recipes/_cookbook_pending_card.html" %}{% endfor %}
     {% for recipe in recipes %}{% include "recipes/_cookbook_card.html" %}{% endfor %}
   </div>
   {% endif %}

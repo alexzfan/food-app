@@ -453,3 +453,9 @@
 /* Settled state after Extract: recipe is (optimistically) in the cookbook */
 .extract--done { background: var(--accent-soft); color: var(--on-soft); box-shadow: none; cursor: default; }
 .extract--done:hover { background: var(--accent-soft); }
+
+/* In-progress extraction placeholders in the cookbook */
+@keyframes spin { to { transform: rotate(360deg); } }
+.rcard--pending, .lrow--pending { animation: pending-pulse 1.6s ease-in-out infinite; }
+@keyframes pending-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+.pending-spin { width: 26px; height: 26px; border: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); border-right-color: var(--accent); border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; }
