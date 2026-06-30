@@ -384,7 +384,7 @@ def toggle_favorite(request, pk):
         template = "recipes/_cookbook_card.html"
     else:
         template = "recipes/_recipe_card.html"
-    return render(request, template, {"recipe": recipe})
+    return render(request, template, {"recipe": recipe, "view": request.POST.get("view", "grid")})
 
 
 @login_required

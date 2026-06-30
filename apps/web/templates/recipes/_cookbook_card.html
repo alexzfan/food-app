@@ -1,4 +1,3 @@
-{% load static %}
 <div class="rcard" id="recipe-{{ recipe.id }}">
   <div class="rthumb" style="background:linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--secondary) 18%, var(--surface-2)));">
     {% if recipe.thumbnail_url %}<img src="{{ recipe.thumbnail_url }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">{% endif %}
