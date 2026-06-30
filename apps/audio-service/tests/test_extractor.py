@@ -26,6 +26,31 @@ def test_parse_requires_title():
         parse_recipe_response('{"description": "x"}')
 
 
+def test_parse_reports_clear_error_when_no_json_object():
+    # A prose-only / truncated response must not surface as the cryptic
+    # "Expecting value: line 1 column 1 (char 0)" JSONDecodeError. The error
+    # should say the model returned no JSON and include a snippet to diagnose.
+    with pytest.raises(ValueError) as exc:
+        parse_recipe_response("Sure! Here is the recipe you asked for")
+    msg = str(exc.value)
+    assert "JSON" in msg
+    assert "Sure!" in msg  # snippet of what actually came back
+
+
+def test_parse_reports_empty_response():
+    with pytest.raises(ValueError) as exc:
+        parse_recipe_response("   ")
+    assert "empty" in str(exc.value).lower()
+
+
+def test_parse_reports_malformed_truncated_json():
+    # Output cut off mid-object: clear "malformed JSON" message, not a raw
+    # "Unterminated string" / "Expecting ',' delimiter".
+    with pytest.raises(ValueError) as exc:
+        parse_recipe_response('{"title": "Pas')
+    assert "JSON" in str(exc.value)
+
+
 def test_get_extractor_selects_backend(monkeypatch):
     from app.extractor import (
         HostedExtractor,
@@ -70,6 +95,35 @@ def test_llamacpp_extractor_omits_auth_header_when_no_key(monkeypatch):
     LlamaCppExtractor().extract("boil pasta", "Pasta")
 
     assert "Authorization" not in captured["headers"]
+
+
+def test_hosted_extractor_flags_truncated_response(monkeypatch):
+    # When the model hits the context/token limit, llama.cpp returns
+    # finish_reason="length" with a cut-off body. That must raise a clear,
+    # actionable error -- not an opaque JSONDecodeError surfaced as a 502.
+    from app.extractor import HostedExtractor
+
+    class _Trunc:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "choices": [
+                    {
+                        "finish_reason": "length",
+                        "message": {"content": '{"title": "Pas'},
+                    }
+                ]
+            }
+
+    monkeypatch.setattr("app.extractor.httpx.post", lambda url, **kwargs: _Trunc())
+
+    with pytest.raises(ValueError) as exc:
+        HostedExtractor().extract("a very long transcript", "Pasta")
+    msg = str(exc.value).lower()
+    assert "truncat" in msg
+    assert "context" in msg or "transcript" in msg
 
 
 def test_hosted_extractor_sends_auth_header_when_key_set(monkeypatch):

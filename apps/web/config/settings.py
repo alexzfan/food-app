@@ -15,6 +15,14 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-key-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
+# Django's SecurityMiddleware defaults Referrer-Policy to "same-origin", which
+# strips the Referer header from cross-origin requests -- including the YouTube
+# video embed on the recipe view, which YouTube then rejects with playback
+# error 153. "strict-origin-when-cross-origin" (the modern browser default)
+# sends just the origin cross-origin, enough for YouTube to verify the
+# embedding domain while still not leaking full URLs off-site.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

@@ -3,7 +3,7 @@ from pathlib import Path
 from celery import shared_task
 
 from . import facets, ml_client
-from .models import ExtractionJob, Recipe
+from .models import ExtractionJob, Recipe, Video
 
 
 def _set(job, status, label=""):
@@ -34,9 +34,19 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
             if job.source == ExtractionJob.Source.YOUTUBE_CAPTIONS
             else ""
         )
+        # Carry the source channel onto the recipe so the detail view can credit
+        # it. The name lives on the cached Video (keyed by video id) from the
+        # search that surfaced this clip; best-effort -- a pruned/absent cache
+        # row just leaves it blank, which the template renders as no credit.
+        channel_name = ""
+        if job.youtube_video_id:
+            video = Video.objects.filter(video_id=job.youtube_video_id).first()
+            if video:
+                channel_name = video.channel_title
         recipe = Recipe.objects.create(
             owner=job.owner,
             youtube_video_id=job.youtube_video_id,
+            channel_name=channel_name,
             transcript=stored_transcript or "",
             title=summary["title"],
             description=summary.get("description", ""),
