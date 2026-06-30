@@ -179,7 +179,7 @@ Run: web `cd apps/web && ../../.venv-web/bin/pytest -q`; ml `cd apps/audio-servi
 ML /extract (emits meal_type, dietary)
   → tasks.run_extraction_job (normalize → Recipe.meal_type / .dietary)
   → views.saved (read query params → filter/sort, build facet lists)
-  → _cookbook.html / _cookbook_card.html (eyebrow CUISINE·MEAL, diet badge)
+  → _cookbook.html / _cookbook_card.html (eyebrow CUISINE·MEAL; dietary stored, not surfaced — §A)
 ```
 
 ## Documented simplifications
