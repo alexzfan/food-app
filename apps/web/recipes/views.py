@@ -150,7 +150,7 @@ def extract_from_captions(request):
         title=title,
     )
     run_extraction_job.delay(job.id, transcript=transcript)
-    return render(request, "recipes/_job_status.html", {"job": job})
+    return render(request, "recipes/_extract_done.html", {"job": job})
 
 
 # ---------------------------------------------------------------------------

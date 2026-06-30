@@ -43,6 +43,19 @@ def test_extract_without_captions_shows_fallback(auth_client):
     delay.assert_not_called()
 
 
+def test_extract_returns_in_cookbook_state(auth_client):
+    with patch("recipes.views.youtube.fetch_transcript", return_value="boil pasta"), \
+         patch("recipes.views.run_extraction_job.delay"):
+        resp = auth_client.post(
+            "/youtube/extract/", {"video_id": "abc", "title": "Pasta"}
+        )
+    assert resp.status_code == 200
+    assert b"In cookbook" in resp.content
+    assert b"extract--done" in resp.content
+    assert b"hx-get" not in resp.content          # no status poller
+    assert "HX-Redirect" not in resp                # stays on the results page
+
+
 def test_extract_requires_post(auth_client):
     resp = auth_client.get("/youtube/extract/")
     assert resp.status_code == 405
