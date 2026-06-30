@@ -168,3 +168,18 @@ def test_search_form_preserves_active_facets_as_hidden_inputs(auth_client, user)
     _mk(user, title="Pasta", cuisine="italian")
     resp = auth_client.get("/saved/", {"cuisine": "italian"})
     assert b'<input type="hidden" name="cuisine" value="italian">' in resp.content
+
+
+def test_empty_facets_are_hidden(auth_client, user):
+    # Recipe has a cuisine but no meal_type / cook_time / creator, so only the
+    # Cuisine facet has values. Spec E: empty facets are hidden.
+    _mk(user, title="Pasta", cuisine="italian")
+    resp = auth_client.get("/saved/")
+    assert b"Cuisine" in resp.content       # has values -> shown
+    assert b"Meal type" not in resp.content  # empty -> hidden
+    assert b"Creator" not in resp.content    # empty -> hidden
+
+
+def test_cold_cookbook_shows_no_facet_dropdowns(auth_client, user):
+    resp = auth_client.get("/saved/")
+    assert resp.content.count(b'class="ddbtn') == 1  # only the Favorites button

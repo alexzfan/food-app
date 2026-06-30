@@ -24,12 +24,13 @@
 </div>
 
 <form class="cooksearch" hx-get="{% url 'saved' %}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true" hx-trigger="keyup changed delay:400ms, submit" style="margin-bottom:16px;">
-  <input type="search" name="q" value="{{ q }}" class="cooksearch__input" placeholder="Search a dish, ingredient, or creator…" aria-label="Search your cookbook">
+  <input type="search" id="cookbook-search" name="q" value="{{ q }}" class="cooksearch__input" placeholder="Search a dish or creator…" aria-label="Search your cookbook">
   {% for k, v in preserved_params %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
 </form>
 
 <div class="toolbar" style="margin-bottom:18px;">
   {% for group in facet_groups %}
+  {% if group.options %}
   <div style="position:relative;" x-data="{ open: false }">
     <span class="ddbtn" @click="open = !open" style="cursor:pointer;">{{ group.label }}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
@@ -43,6 +44,7 @@
       {% endfor %}
     </div>
   </div>
+  {% endif %}
   {% endfor %}
   <a class="ddbtn {% if fav_active %}on{% endif %}" href="?{{ fav_url }}" hx-get="?{{ fav_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Favorites{% if fav_count %} <span class="ct">{{ fav_count }}</span>{% endif %}</a>
 </div>

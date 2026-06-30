@@ -29,3 +29,12 @@ def test_backfill_dry_run_writes_nothing(user):
     call_command("backfill_recipe_facets", "--dry-run")
     r.refresh_from_db()
     assert r.meal_type == ""
+
+
+def test_backfill_keywords_match_whole_words_only(user):
+    # "gf" must not fire on "kingfisher"; "side" must not fire on "inside".
+    r = Recipe.objects.create(owner=user, title="Inside-out Kingfisher Bake", tags=[])
+    call_command("backfill_recipe_facets")
+    r.refresh_from_db()
+    assert r.meal_type == ""   # no "side" false-positive
+    assert r.dietary == []     # no "gf" false-positive

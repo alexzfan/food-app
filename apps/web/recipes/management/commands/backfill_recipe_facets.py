@@ -3,6 +3,8 @@
 Only fills empties (never overwrites). Heuristic keyword matching — values the
 LLM didn't classify and whose tags/title give no signal are left blank.
 """
+import re
+
 from django.core.management.base import BaseCommand
 
 from recipes.models import Recipe
@@ -29,10 +31,17 @@ def _haystack(recipe):
     return (" ".join(str(t) for t in recipe.tags) + " " + recipe.title).lower()
 
 
+def _matches(kw, hay):
+    # Whole-word match so "gf" doesn't fire on "kingfisher" and "side" doesn't
+    # fire on "inside"/"beside". Keywords may contain spaces/hyphens (e.g.
+    # "gluten free"); \b anchors the outer boundaries fine for those too.
+    return re.search(rf"\b{re.escape(kw)}\b", hay) is not None
+
+
 def _derive_meal(recipe):
     hay = _haystack(recipe)
     for kw, meal in _MEAL_KEYWORDS.items():
-        if kw in hay:
+        if _matches(kw, hay):
             return meal
     return ""
 
@@ -41,7 +50,7 @@ def _derive_diet(recipe):
     hay = _haystack(recipe)
     out = []
     for kw, diet in _DIET_KEYWORDS.items():
-        if kw in hay and diet not in out:
+        if _matches(kw, hay) and diet not in out:
             out.append(diet)
     return out
 
