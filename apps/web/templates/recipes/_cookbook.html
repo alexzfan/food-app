@@ -1,0 +1,73 @@
+{% load static %}
+<div class="mhead">
+  <div>
+    <div class="count">{% if has_filters %}{{ shown }} OF {{ total }} RECIPES{% else %}{{ total }} RECIPE{{ total|pluralize }} IN YOUR COOKBOOK{% endif %}</div>
+    <h3 class="htitle" style="font-size:27px;">Your cookbook</h3>
+  </div>
+  <div style="display:flex; align-items:center; gap:12px;" x-data="{ sortOpen: false }">
+    <div style="position:relative;">
+      <span class="sort" @click="sortOpen = !sortOpen" style="cursor:pointer;">{{ sort_label|upper }}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      <div class="ddmenu" x-show="sortOpen" @click.outside="sortOpen = false" x-cloak style="right:0; width:180px;">
+        {% for opt in sort_options %}
+        <a class="mrow {% if opt.active %}on{% endif %}" href="?{{ opt.url }}"
+           hx-get="?{{ opt.url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">{{ opt.label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="vtog">
+      <a class="{% if view == 'grid' %}on{% endif %}" href="?{{ grid_url }}" hx-get="?{{ grid_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true" aria-label="Grid view">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></a>
+      <a class="{% if view == 'list' %}on{% endif %}" href="?{{ list_url }}" hx-get="?{{ list_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true" aria-label="List view">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3.5" y1="6" x2="3.51" y2="6"></line><line x1="3.5" y1="12" x2="3.51" y2="12"></line><line x1="3.5" y1="18" x2="3.51" y2="18"></line></svg></a>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar" style="margin-bottom:18px;">
+  {% for group in facet_groups %}
+  <div style="position:relative;" x-data="{ open: false }">
+    <span class="ddbtn {% if group.name in '' %}{% endif %}" @click="open = !open" style="cursor:pointer;">{{ group.label }}
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+    <div class="ddmenu" x-show="open" @click.outside="open = false" x-cloak>
+      <div class="mlabel">{{ group.label|upper }} · MULTI-SELECT</div>
+      {% for opt in group.options %}
+      <a class="mrow {% if opt.active %}on{% endif %}" href="?{{ opt.url }}"
+         hx-get="?{{ opt.url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">
+        <span class="cbox">{% if opt.active %}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>{% endif %}</span>
+        {{ opt.label }}<span class="ct">{{ opt.count }}</span></a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  <a class="ddbtn {% if fav_active %}on{% endif %}" href="?{{ fav_url }}" hx-get="?{{ fav_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Favorites{% if fav_count %} <span class="ct">{{ fav_count }}</span>{% endif %}</a>
+</div>
+
+{% if chips %}
+<div class="achips" style="padding-bottom:18px; margin-bottom:6px; border-bottom:1px solid var(--line);">
+  {% for chip in chips %}
+  <a class="achip" href="?{{ chip.url }}" hx-get="?{{ chip.url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">{{ chip.label }}<span class="x"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span></a>
+  {% endfor %}
+  <a class="clearall" href="?{{ clear_url }}" hx-get="?{{ clear_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Clear all</a>
+</div>
+{% endif %}
+
+{% if recipes %}
+  <div class="grid3">
+    {% for recipe in recipes %}{% include "recipes/_cookbook_card.html" %}{% endfor %}
+  </div>
+{% elif has_filters %}
+  <div class="empty">
+    <div class="eicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></div>
+    <h3 class="htitle" style="font-size:24px;">Nothing matches</h3>
+    <p style="color:var(--ink-2); margin:8px 0 20px;">No saved recipes fit those filters.</p>
+    <a class="ebtn ghost" href="?{{ clear_url }}" hx-get="?{{ clear_url }}" hx-target="#cookbook" hx-select="#cookbook" hx-swap="innerHTML" hx-push-url="true">Clear all filters</a>
+  </div>
+{% else %}
+  <div class="empty">
+    <div class="eicon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></div>
+    <h3 class="htitle" style="font-size:24px;">Nothing saved yet</h3>
+    <p style="color:var(--ink-2); margin:8px 0 20px;">Recipes you save from Discover land in your cookbook.</p>
+    <a class="ebtn" href="{% url 'discover' %}">Discover recipes</a>
+  </div>
+{% endif %}

@@ -32,6 +32,6 @@
     </div>
   </nav>
   {% if messages %}<ul class="flash">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
-  <main class="app-main">{% block content %}{% endblock %}</main>
+  <main class="app-main {% block main_class %}{% endblock %}">{% block content %}{% endblock %}</main>
 </body>
 </html>

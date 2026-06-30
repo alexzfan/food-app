@@ -1,4 +1,5 @@
 /* Mise components — consume tokens.css custom properties. */
+.app-main--wide { max-width: 1180px; }
 
 /* buttons */
 .btn {

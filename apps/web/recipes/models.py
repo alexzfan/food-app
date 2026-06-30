@@ -44,6 +44,17 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def cook_time_display(self):
+        m = self.cook_time_minutes
+        if not m:
+            return ""
+        if m % 60 == 0:
+            return f"{m // 60} HR" if m >= 60 else f"{m} MIN"
+        if m > 60:
+            return f"{m // 60} HR {m % 60} MIN"
+        return f"{m} MIN"
+
 
 class Video(models.Model):
     """Canonical, deduplicated YouTube video metadata for the search cache.
