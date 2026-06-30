@@ -2,7 +2,7 @@ from pathlib import Path
 
 from celery import shared_task
 
-from . import ml_client
+from . import facets, ml_client
 from .models import ExtractionJob, Recipe, Video
 
 
@@ -58,6 +58,8 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
             prep_time_minutes=summary.get("prep_time_minutes"),
             servings=summary.get("servings"),
             difficulty=summary.get("difficulty", "") or "",
+            meal_type=facets.normalize_meal_type(summary.get("meal_type", "")),
+            dietary=facets.normalize_dietary(summary.get("dietary", [])),
         )
         job.recipe = recipe
         _set(job, ExtractionJob.Status.DONE, "Done")

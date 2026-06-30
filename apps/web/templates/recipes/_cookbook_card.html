@@ -1,0 +1,23 @@
+<div class="rcard" id="recipe-{{ recipe.id }}">
+  <div class="rthumb" style="background:linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--secondary) 18%, var(--surface-2)));">
+    {% if recipe.thumbnail_url %}<img src="{{ recipe.thumbnail_url }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">{% endif %}
+    <span class="play"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20"></polygon></svg></span>
+    <form hx-post="{% url 'toggle_favorite' recipe.id %}" hx-target="#recipe-{{ recipe.id }}" hx-swap="outerHTML" style="position:absolute; right:10px; top:10px; margin:0;">
+      {% csrf_token %}
+      <input type="hidden" name="context" value="cookbook">
+      <input type="hidden" name="view" value="{{ view }}">
+      <button type="submit" class="fav {% if recipe.is_favorite %}on{% endif %}" aria-label="{% if recipe.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if recipe.is_favorite %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="1.6"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </button>
+    </form>
+  </div>
+  <div style="padding:15px 16px 17px;">
+    <div class="ceyebrow">{% if recipe.cuisine %}{{ recipe.cuisine|upper }}{% endif %}{% if recipe.cuisine and recipe.meal_type %} · {% endif %}{% if recipe.meal_type %}{{ recipe.get_meal_type_display|upper }}{% endif %}</div>
+    <h4 class="rtitle"><a href="{% url 'recipe_detail' recipe.id %}" style="color:inherit;">{{ recipe.title }}</a></h4>
+    {% if recipe.channel_name %}<div class="credit"><span class="av"></span><span class="cn">{{ recipe.channel_name }}</span></div>{% endif %}
+    <div class="cfoot">
+      {% if recipe.cook_time_display %}<span class="badge">{{ recipe.cook_time_display }}</span>{% endif %}
+      {% if recipe.difficulty %}<span class="badge">{{ recipe.difficulty|upper }}</span>{% endif %}
+    </div>
+  </div>
+</div>

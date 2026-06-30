@@ -40,3 +40,14 @@ def test_youtube_captions_source_exists():
 def test_recipe_transcript_defaults_blank(user):
     r = Recipe.objects.create(owner=user, title="Pasta")
     assert r.transcript == ""
+
+
+def test_recipe_meal_type_and_dietary_defaults(db, django_user_model):
+    user = django_user_model.objects.create_user(email="m@e.com", password="supersecret")
+    r = Recipe.objects.create(owner=user, title="X", meal_type="dinner", dietary=["vegan"])
+    r.refresh_from_db()
+    assert r.meal_type == "dinner"
+    assert r.dietary == ["vegan"]
+    blank = Recipe.objects.create(owner=user, title="Y")
+    assert blank.meal_type == ""
+    assert blank.dietary == []

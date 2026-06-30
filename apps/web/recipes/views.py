@@ -1,3 +1,4 @@
+from collections import Counter
 from pathlib import Path
 
 from django.conf import settings
@@ -10,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.views import onboarding_required
 
-from . import search_cache, youtube
+from . import facets, search_cache, youtube
 from .models import ExtractionJob, Favorite, Recipe
 from .tasks import run_extraction_job
 
@@ -212,14 +213,127 @@ def _annotated(qs, user):
     return qs.annotate(is_favorite=Exists(fav))
 
 
+SORTS = {"recent": "Recently added", "quickest": "Quickest first"}
+
+
+def _facet_group(name, label, params, sel, counts, *, order=None, labels=None):
+    keys = order if order is not None else sorted(counts, key=lambda k: (-counts[k], k))
+    options = []
+    for value in keys:
+        count = counts.get(value, 0)
+        if count == 0:
+            continue
+        options.append({
+            "value": value,
+            "label": labels[value] if labels else value,
+            "count": count,
+            "active": value in sel,
+            "url": facets.toggle_param(params, name, value),
+        })
+    return {"name": name, "label": label, "options": options}
+
+
 @login_required
 @onboarding_required
 def saved(request):
-    q = request.GET.get("q", "").strip()
-    recipes = _annotated(Recipe.objects.filter(owner=request.user), request.user)
-    if q:
-        recipes = recipes.filter(title__icontains=q)
-    return render(request, "recipes/saved.html", {"recipes": recipes, "q": q})
+    user = request.user
+    params = request.GET
+    cookbook = list(_annotated(Recipe.objects.filter(owner=user), user))
+    total = len(cookbook)
+
+    q = params.get("q", "").strip()
+    sel = {
+        "cuisine": params.getlist("cuisine"),
+        "meal": params.getlist("meal"),
+        "time": [t for t in params.getlist("time") if t in facets.TIME_BUCKET_KEYS],
+        "creator": params.getlist("creator"),
+    }
+    fav = params.get("fav") == "1"
+    sort = params.get("sort") if params.get("sort") in SORTS else "recent"
+    view = "list" if params.get("view") == "list" else "grid"
+
+    # Per-value counts over the whole cookbook (documented simplification).
+    cuisine_counts = Counter(r.cuisine for r in cookbook if r.cuisine)
+    creator_counts = Counter(r.channel_name for r in cookbook if r.channel_name)
+    meal_counts = Counter(r.meal_type for r in cookbook if r.meal_type)
+    time_counts = Counter(
+        b for r in cookbook if (b := facets.time_bucket(r.cook_time_minutes))
+    )
+    fav_count = sum(1 for r in cookbook if r.is_favorite)
+
+    ql = q.lower()
+
+    def keep(r):
+        if ql and ql not in r.title.lower() and ql not in (r.channel_name or "").lower():
+            return False
+        if sel["cuisine"] and r.cuisine not in sel["cuisine"]:
+            return False
+        if sel["meal"] and r.meal_type not in sel["meal"]:
+            return False
+        if sel["time"] and facets.time_bucket(r.cook_time_minutes) not in sel["time"]:
+            return False
+        if sel["creator"] and r.channel_name not in sel["creator"]:
+            return False
+        if fav and not r.is_favorite:
+            return False
+        return True
+
+    results = [r for r in cookbook if keep(r)]
+    if sort == "quickest":
+        results.sort(key=lambda r: (r.cook_time_minutes is None, r.cook_time_minutes or 0))
+    else:
+        results.sort(key=lambda r: r.created_at, reverse=True)
+
+    facet_groups = [
+        _facet_group("cuisine", "Cuisine", params, sel["cuisine"], cuisine_counts),
+        _facet_group("meal", "Meal type", params, sel["meal"], meal_counts,
+                     order=facets.MEAL_TYPES, labels=facets.MEAL_LABELS),
+        _facet_group("time", "Time", params, sel["time"], time_counts,
+                     order=facets.TIME_BUCKET_KEYS,
+                     labels={b["key"]: b["label"] for b in facets.TIME_BUCKETS}),
+        _facet_group("creator", "Creator", params, sel["creator"], creator_counts),
+    ]
+
+    chips = []
+    for group in facet_groups:
+        for opt in group["options"]:
+            if opt["active"]:
+                chips.append({"label": opt["label"], "url": opt["url"]})
+    if fav:
+        chips.append({"label": "Favorites", "url": facets.toggle_param(params, "fav", "1")})
+
+    sort_options = [
+        {"value": key, "label": label, "active": key == sort,
+         "url": facets.set_param(params, "sort", key)}
+        for key, label in SORTS.items()
+    ]
+
+    return render(request, "recipes/cookbook.html", {
+        "recipes": results,
+        "total": total,
+        "shown": len(results),
+        "q": q,
+        "sort": sort,
+        "sort_label": SORTS[sort],
+        "sort_options": sort_options,
+        "view": view,
+        "grid_url": facets.set_param(params, "view", "grid"),
+        "list_url": facets.set_param(params, "view", "list"),
+        "facet_groups": facet_groups,
+        "fav_active": fav,
+        "fav_count": fav_count,
+        "fav_url": facets.toggle_param(params, "fav", "1"),
+        "chips": chips,
+        "clear_url": facets.clear_filters(params),
+        "has_filters": bool(q or fav or any(sel.values())),
+        "preserved_params": [
+            (k, v)
+            for k, vals in params.lists()
+            for v in vals
+            if k != "q" and v != ""
+        ],
+        "reset_url": facets.clear_filters(params, keep=("sort", "view")),
+    })
 
 
 @login_required
@@ -273,9 +387,14 @@ def toggle_favorite(request, pk):
         template = "recipes/_favorite_button.html"
     elif request.POST.get("context") == "search":
         template = "recipes/_save_button.html"
+    elif request.POST.get("context") == "cookbook":
+        if request.POST.get("view") == "list":
+            template = "recipes/_cookbook_row.html"
+        else:
+            template = "recipes/_cookbook_card.html"
     else:
         template = "recipes/_recipe_card.html"
-    return render(request, template, {"recipe": recipe})
+    return render(request, template, {"recipe": recipe, "view": request.POST.get("view", "grid")})
 
 
 @login_required

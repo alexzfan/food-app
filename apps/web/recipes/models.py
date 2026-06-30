@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from . import facets
 from .youtube import _format_views, seconds_to_display
 
 
@@ -22,6 +23,11 @@ class Recipe(models.Model):
     instructions = models.JSONField(default=list)  # [{step, text, start?, duration?}]
     tags = models.JSONField(default=list)          # [str]
     cuisine = models.CharField(max_length=100, blank=True)
+    meal_type = models.CharField(
+        max_length=20, blank=True,
+        choices=[(m, facets.MEAL_LABELS[m]) for m in facets.MEAL_TYPES],
+    )
+    dietary = models.JSONField(default=list)  # subset of facets.DIETARY_TAGS; not surfaced yet
     cook_time_minutes = models.PositiveIntegerField(null=True, blank=True)
     prep_time_minutes = models.PositiveIntegerField(null=True, blank=True)
     servings = models.PositiveIntegerField(null=True, blank=True)
@@ -37,6 +43,17 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def cook_time_display(self):
+        m = self.cook_time_minutes
+        if not m:
+            return ""
+        if m % 60 == 0:
+            return f"{m // 60} HR"
+        if m > 60:
+            return f"{m // 60} HR {m % 60} MIN"
+        return f"{m} MIN"
 
 
 class Video(models.Model):

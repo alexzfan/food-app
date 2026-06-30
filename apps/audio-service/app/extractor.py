@@ -7,6 +7,32 @@ import httpx
 from .prompt import build_prompt
 
 
+_MEAL_TYPES = {"breakfast", "lunch", "dinner", "dessert", "side", "snack"}
+_DIETARY = {"vegetarian", "vegan", "gluten_free"}
+
+
+def _normalize_meal_type(value):
+    if not isinstance(value, str):
+        return ""
+    v = value.strip().lower()
+    return v if v in _MEAL_TYPES else ""
+
+
+def _normalize_dietary(value):
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, (list, tuple)):
+        return []
+    out = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        v = item.strip().lower().replace("-", "_").replace(" ", "_")
+        if v in _DIETARY and v not in out:
+            out.append(v)
+    return out
+
+
 def _coerce_start(value):
     if isinstance(value, bool) or value is None:
         return None
@@ -51,6 +77,8 @@ def parse_recipe_response(text: str) -> dict:
     recipe.setdefault("ingredients", [])
     recipe.setdefault("instructions", [])
     recipe.setdefault("tags", [])
+    recipe["meal_type"] = _normalize_meal_type(recipe.get("meal_type", ""))
+    recipe["dietary"] = _normalize_dietary(recipe.get("dietary", []))
     for step in recipe["instructions"]:
         if isinstance(step, dict):
             step["start"] = _coerce_start(step.get("start"))
