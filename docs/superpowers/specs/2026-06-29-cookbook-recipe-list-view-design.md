@@ -14,8 +14,10 @@ To reach full design fidelity, add two real `Recipe` fields — `meal_type` and 
 classified by the LLM extractor for new recipes and backfilled best-effort for existing rows.
 
 Out of scope: the design's 1a filter-rail direction; the "Cooked recently" facet (no
-backing data); the "Ingredient on hand" facet. The existing standalone Favorites page is
-left untouched (Favorites also appears as a quick-toggle inside the Cookbook).
+backing data); the "Ingredient on hand" facet; the **dietary filter facet + card diet
+badge** (data is collected but not surfaced yet — see §A). The existing standalone
+Favorites page is left untouched (Favorites also appears as a quick-toggle inside the
+Cookbook).
 
 Routing stays as-is: URL `/saved/`, url name `saved`, nav label "Saved". The page heading
 becomes "Your cookbook".
@@ -28,9 +30,11 @@ Add to `Recipe`:
   New `MealType` TextChoices: `breakfast, lunch, dinner, dessert, side, snack`.
   Single value. Renders in card eyebrow as `CUISINE · MEAL`.
 - `dietary` — `JSONField(default=list)`. Closed vocabulary: `vegetarian | vegan |
-  gluten_free`. A recipe may carry several. The card has a single diet-badge slot showing
-  the **primary** tag by priority `vegan > vegetarian > gluten_free` (first present wins);
-  no badge when `dietary == []`.
+  gluten_free`. A recipe may carry several. **Stored but not surfaced in the UI yet**: the
+  field is populated by the extractor + backfill so we accumulate data to audit LLM
+  accuracy, but there is no dietary filter facet and no card diet badge in this iteration
+  (dietary accuracy is higher-stakes than meal type — a wrong "vegan"/"gluten-free" is
+  misleading). The filter + badge get added in a later iteration once accuracy is trusted.
 
 Define the allowed vocabularies once as module constants reused by the extractor mapping,
 the backfill command, and the view's facet lists:
@@ -88,7 +92,6 @@ Query params (all server-driven; no client-side filtering JS):
 | `q`       | str             | substring match on `title` or `channel_name` |
 | `cuisine` | multi           | cuisine strings present in the cookbook |
 | `meal`    | multi           | `MEAL_TYPES` |
-| `diet`    | multi           | `DIETARY_TAGS` |
 | `time`    | multi (buckets) | non-overlapping `cook_time_minutes` buckets: `under15` (≤15), `15-30` (>15,≤30), `30-60` (>30,≤60), `over60` (>60) |
 | `creator` | multi           | `channel_name` values present in the cookbook |
 | `fav`     | bool flag       | restrict to favorited recipes |
@@ -100,8 +103,9 @@ Query params (all server-driven; no client-side filtering JS):
 
 **Facet option lists + counts:** for each facet, list its distinct values with a per-value
 count computed over the user's **whole cookbook** (not the post-filter set — documented
-simplification). Cuisine/creator lists derive from the user's recipes; meal/diet/time from
-the fixed vocab/buckets. Empty facets (no values) are hidden.
+simplification). Cuisine/creator lists derive from the user's recipes; meal/time from the
+fixed vocab/buckets. Empty facets (no values) are hidden. (Dietary is intentionally not a
+facet in this iteration — see §A.)
 
 **Server-rendered facet toggling:** for each option the view provides the querystring that
 represents "current state with this value toggled" (helper builds it from the current
@@ -125,9 +129,9 @@ and `q`.
 - `_cookbook_card.html` — grid card (`.rcard`): thumb (`<img>` when `thumbnail_url`, else
   the design's gradient fallback), `.play` glyph, `.fav` star (favorite toggle),
   `CUISINE · MEAL` `.ceyebrow`, `.rtitle` linking to `recipe_detail`, `.credit` creator,
-  `.cfoot` badges (time `N MIN`/`N HR`, difficulty, primary diet badge).
+  `.cfoot` badges (time `N MIN`/`N HR`, difficulty). No diet badge in this iteration (§A).
 - `_cookbook_row.html` — list row (`.lrow`): wider thumb, eyebrow, title, creator,
-  `description`, badges, trailing fav star. Used when `view=list`.
+  `description`, badges (time, difficulty), trailing fav star. Used when `view=list`.
 - Empty states inside `_cookbook.html`:
   - cold (cookbook truly empty) → "Nothing saved yet" + Discover CTA (`.empty/.eicon/.ebtn`).
   - filtered (cookbook non-empty, zero matches) → "Nothing matches" + "Clear all".
@@ -142,10 +146,10 @@ the next filter action (documented simplification).
 Port the 1b component classes from the design file's `<style>` block. Design tokens already
 exist in `tokens.css` (same names), so rules port nearly verbatim:
 
-`.grid3, .rcard, .rthumb, .play, .fav(.on), .ceyebrow, .rtitle, .credit, .cfoot, .diet,
+`.grid3, .rcard, .rthumb, .play, .fav(.on), .ceyebrow, .rtitle, .credit, .cfoot,
 .lrow, .lthumb, .ltitle, .mhead, .count, .htitle, .eyebrow, .sort, .vtog, .toolbar, .ddbtn,
 .achips, .achip, .clearall, .ddmenu, .mrow, .mlabel, .mfoot, .empty, .eicon, .ebtn` plus the
-`.app-main--wide` modifier.
+`.app-main--wide` modifier. (`.diet` is deferred with the dietary badge — §A.)
 
 Collision: the design's `.badge` differs from the existing `.badge`/`.badge--time`. Scope
 the new one as `.cookbook .badge` (the fragment lives under a `.cookbook` ancestor) so
@@ -154,7 +158,8 @@ existing search/saved cards are unaffected.
 ## H. Testing
 
 - `apps/web/recipes/tests/test_cookbook.py`:
-  - each facet filters correctly (cuisine, meal, diet, each time bucket, creator, fav);
+  - each facet filters correctly (cuisine, meal, each time bucket, creator, fav);
+  - `dietary` is populated on extraction/backfill but exposes no filter facet or badge;
   - OR-within-facet / AND-across-facets; multi-value selections;
   - both sorts (recent, quickest with null `cook_time` last);
   - `q` search on title and creator;
