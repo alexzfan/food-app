@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from . import facets
+from . import facets, youtube
 from .youtube import _format_views, seconds_to_display
 
 
@@ -166,3 +166,9 @@ class ExtractionJob(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    @property
+    def thumbnail_url(self):
+        """Derived hqdefault thumbnail for the pending cookbook card; "" when
+        the job has no source video (e.g. a pasted transcript)."""
+        return youtube.thumbnail_url(self.youtube_video_id)

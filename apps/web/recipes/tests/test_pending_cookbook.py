@@ -51,6 +51,22 @@ def test_job_card_running_returns_pending(auth_client, user):
     assert b"hx-get" in resp.content          # keeps polling
 
 
+def test_pending_card_shows_video_thumbnail(auth_client, user):
+    # While extracting, the card shows the source video's thumbnail (derived
+    # from the video id) so it isn't a blank placeholder.
+    job = _job(user, youtube_video_id="abc123")
+    resp = auth_client.get(f"/jobs/{job.id}/card/")
+    assert b"https://i.ytimg.com/vi/abc123/hqdefault.jpg" in resp.content
+
+
+def test_pending_card_without_video_has_no_broken_image(auth_client, user):
+    # A pasted-transcript job has no video -> no <img>, just the placeholder.
+    job = _job(user, source="paste_transcript", youtube_video_id="")
+    resp = auth_client.get(f"/jobs/{job.id}/card/")
+    assert b"i.ytimg.com" not in resp.content
+    assert b"<img" not in resp.content
+
+
 def test_job_card_done_returns_recipe_card(auth_client, user):
     recipe = Recipe.objects.create(owner=user, title="Done Pasta")
     job = _job(user, status=ExtractionJob.Status.DONE, recipe=recipe)

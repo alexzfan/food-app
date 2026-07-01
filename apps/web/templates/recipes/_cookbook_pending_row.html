@@ -1,6 +1,7 @@
 <div class="lrow lrow--pending" id="job-{{ job.id }}"{% if not failed %} hx-get="{% url 'cookbook_job_card' job.id %}?view=list" hx-trigger="load delay:1800ms" hx-swap="outerHTML"{% endif %}>
-  <div class="lthumb" style="background:linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--secondary) 18%, var(--surface-2)));">
-    {% if failed %}<span class="play"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span>{% else %}<span class="pending-spin" role="status" aria-label="Extracting recipe"></span>{% endif %}
+  <div class="lthumb" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--secondary) 18%, var(--surface-2)));">
+    {% if job.thumbnail_url %}<img src="{{ job.thumbnail_url }}" alt="" loading="lazy" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.55;">{% endif %}
+    {% if failed %}<span class="play" style="z-index:1;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span>{% else %}<span class="pending-spin" role="status" aria-label="Extracting recipe" style="position:relative; z-index:1;"></span>{% endif %}
   </div>
   <div style="flex:1; display:flex; flex-direction:column;">
     <div class="ceyebrow">{% if failed %}EXTRACTION FAILED{% else %}EXTRACTING…{% endif %}</div>
