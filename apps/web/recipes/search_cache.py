@@ -14,7 +14,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from .models import SearchQuery, SearchResult, Video
+from .models import Creator, SearchQuery, SearchResult, Video
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,10 @@ def _is_enriched(video):
 
 
 def _to_dict(video):
-    """Rebuild the API-shaped dict the view/templates expect from a Video row."""
+    """Rebuild the API-shaped dict the view/templates expect from a Video row.
+
+    channel_avatar_url is normalized onto Creator, so it's left blank here and
+    filled in bulk by cached_videos (avoids a per-row Creator query)."""
     return {
         "id": video.video_id,
         "title": video.title,
@@ -45,6 +48,7 @@ def _to_dict(video):
         "thumbnail_url": video.thumbnail_url,
         "channel_title": video.channel_title,
         "channel_id": video.channel_id,
+        "channel_avatar_url": "",
         "duration_seconds": video.duration_seconds,
         "duration_display": video.duration_display,
         "view_count": video.view_count,
@@ -67,7 +71,23 @@ def cached_videos(query):
     if timezone.now() - sq.fetched_at > ttl:
         return None
     results = sq.results.select_related("video").order_by("rank")
-    return [_to_dict(r.video) for r in results]
+    videos = [_to_dict(r.video) for r in results]
+    _attach_creator_avatars(videos)
+    return videos
+
+
+def _attach_creator_avatars(videos):
+    """Fill channel_avatar_url on rebuilt dicts from the shared Creator rows."""
+    channel_ids = {v["channel_id"] for v in videos if v["channel_id"]}
+    if not channel_ids:
+        return
+    avatars = dict(
+        Creator.objects.filter(channel_id__in=channel_ids).values_list(
+            "channel_id", "avatar_url"
+        )
+    )
+    for v in videos:
+        v["channel_avatar_url"] = avatars.get(v["channel_id"], "")
 
 
 def search_with_cache(query, fetch):
@@ -123,6 +143,7 @@ def store(query, payload):
     for rank, v in enumerate(videos):
         snippet = {f: v[f] for f in _SNIPPET_FIELDS}
         video, _ = Video.objects.update_or_create(video_id=v["id"], defaults=snippet)
+        _upsert_creator(v)
         if _is_enriched(v):
             # Only write metadata when this fetch actually has it, so a later
             # enrichment-failed fetch can't clobber good values on a shared row.
@@ -133,3 +154,16 @@ def store(query, payload):
         rows.append(SearchResult(query=sq, video=video, rank=rank))
     SearchResult.objects.bulk_create(rows)
     return sq
+
+
+def _upsert_creator(v):
+    """Upsert the shared Creator row for a video's channel. Only overwrite the
+    avatar when this payload has one, so a later avatar-less fetch (channels.list
+    failed) can't wipe a good avatar off the shared row."""
+    channel_id = v.get("channel_id")
+    if not channel_id:
+        return
+    defaults = {"title": v.get("channel_title", "")}
+    if v.get("channel_avatar_url"):
+        defaults["avatar_url"] = v["channel_avatar_url"]
+    Creator.objects.update_or_create(channel_id=channel_id, defaults=defaults)

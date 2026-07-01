@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.utils import timezone
 
 from recipes import search_cache
-from recipes.models import SearchQuery, Video
+from recipes.models import Creator, SearchQuery, Video
 
 
 def _vid(vid, **over):
@@ -77,6 +77,31 @@ def test_store_does_not_clobber_enriched_metadata(db):
     v = Video.objects.get(video_id="a")
     assert v.duration_seconds == 600
     assert v.view_count == 999
+
+
+def test_store_upserts_creator_with_avatar(db):
+    search_cache.store(
+        "pasta",
+        _payload([_vid("a", channel_id="ch1", channel_title="Chef",
+                        channel_avatar_url="http://av/ch1.jpg")]),
+    )
+    creator = Creator.objects.get(channel_id="ch1")
+    assert creator.title == "Chef"
+    assert creator.avatar_url == "http://av/ch1.jpg"
+
+
+def test_store_does_not_clobber_creator_avatar(db):
+    # A refresh whose payload lacks the avatar (e.g. channels.list failed) must
+    # not wipe a good avatar already stored for the channel.
+    search_cache.store("pasta", _payload([_vid("a", channel_avatar_url="http://av/ch1.jpg")]))
+    search_cache.store("carbonara", _payload([_vid("b", channel_avatar_url="")]))
+    assert Creator.objects.get(channel_id="ch1").avatar_url == "http://av/ch1.jpg"
+
+
+def test_cached_videos_attaches_creator_avatar(db):
+    search_cache.store("pasta", _payload([_vid("a", channel_avatar_url="http://av/ch1.jpg")]))
+    videos = search_cache.cached_videos("pasta")
+    assert videos[0]["channel_avatar_url"] == "http://av/ch1.jpg"
 
 
 def test_cached_videos_miss_returns_none(db):

@@ -101,7 +101,38 @@ def search_recipe_videos(query, max_results=10, page_token=None):
             }
         )
     _enrich(videos)
+    _enrich_creators(videos)
     return {"videos": videos, "next_page_token": data.get("nextPageToken")}
+
+
+def _enrich_creators(videos):
+    """Attach each video's channel avatar via one channels.list call.
+
+    Best-effort: any failure leaves channel_avatar_url blank rather than
+    failing the search. Channel avatars aren't in the search/videos snippets;
+    channels.list (1 quota unit) is the only source.
+    """
+    ids = list({v["channel_id"] for v in videos if v.get("channel_id")})
+    avatars = {}
+    if ids:
+        try:
+            resp = httpx.get(
+                f"{YOUTUBE_API_BASE}/channels",
+                params={
+                    "part": "snippet",
+                    "id": ",".join(ids),
+                    "key": settings.YOUTUBE_API_KEY,
+                },
+                timeout=15,
+            )
+            resp.raise_for_status()
+            for item in resp.json().get("items", []):
+                thumbs = item.get("snippet", {}).get("thumbnails", {})
+                avatars[item["id"]] = (thumbs.get("default") or {}).get("url", "")
+        except Exception:
+            avatars = {}
+    for video in videos:
+        video["channel_avatar_url"] = avatars.get(video.get("channel_id"), "")
 
 
 def _enrich(videos):
