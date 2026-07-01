@@ -459,3 +459,13 @@
 .rcard--pending, .lrow--pending { animation: pending-pulse 1.6s ease-in-out infinite; }
 @keyframes pending-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
 .pending-spin { width: 26px; height: 26px; border: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); border-right-color: var(--accent); border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; }
+
+/* Whole recipe card is a click target: a stretched link on the title covers
+   the card; interactive controls (favorite) are raised above it. */
+.cookbook .rcard, .cookbook .lrow { position: relative; }
+.cookbook .rcard { transition: box-shadow .18s ease, transform .18s ease; }
+.cookbook .rcard:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
+.cookbook .card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.cookbook .card-link:focus-visible { outline: none; }
+.cookbook .card-link:focus-visible::after { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 14px; }
+.cookbook .rcard form, .cookbook .lrow form { position: relative; z-index: 2; }
