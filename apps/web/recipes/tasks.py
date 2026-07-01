@@ -3,7 +3,7 @@ from pathlib import Path
 from celery import shared_task
 
 from . import facets, ml_client, youtube
-from .models import ExtractionJob, Recipe, Video
+from .models import Creator, ExtractionJob, Recipe, Video
 
 
 def _set(job, status, label=""):
@@ -41,11 +41,19 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
         # deterministic thumbnail URL and a blank credit.
         channel_name = ""
         thumbnail = ""
+        creator = None
         if job.youtube_video_id:
             video = Video.objects.filter(video_id=job.youtube_video_id).first()
             if video:
                 channel_name = video.channel_title
                 thumbnail = video.thumbnail_url
+                if video.channel_id:
+                    # Link the shared Creator captured at search time (keeps its
+                    # avatar); create a bare one if the cache row is gone.
+                    creator, _ = Creator.objects.get_or_create(
+                        channel_id=video.channel_id,
+                        defaults={"title": video.channel_title},
+                    )
             if not thumbnail:
                 thumbnail = youtube.thumbnail_url(job.youtube_video_id)
         recipe = Recipe.objects.create(
@@ -53,6 +61,7 @@ def run_extraction_job(job_id, file_path=None, transcript=None):
             youtube_video_id=job.youtube_video_id,
             channel_name=channel_name,
             thumbnail_url=thumbnail,
+            creator=creator,
             transcript=stored_transcript or "",
             title=summary["title"],
             description=summary.get("description", ""),

@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from recipes import tasks
-from recipes.models import ExtractionJob, Recipe, Video
+from recipes.models import Creator, ExtractionJob, Recipe, Video
 from recipes.tasks import run_extraction_job
 
 User = get_user_model()
@@ -136,6 +136,60 @@ def test_extraction_leaves_thumbnail_blank_without_video_id(user):
         run_extraction_job(job.id, transcript="boil pasta")
     job.refresh_from_db()
     assert Recipe.objects.get(pk=job.recipe_id).thumbnail_url == ""
+
+
+def test_extraction_links_existing_creator(user):
+    # The creator (with avatar) was captured during search; extraction should
+    # link the recipe to that shared Creator row, not overwrite its avatar.
+    Creator.objects.create(
+        channel_id="ch1", title="Lan's Kitchen", avatar_url="http://av/ch1.jpg"
+    )
+    Video.objects.create(
+        video_id="abc123", title="Pasta vid",
+        channel_id="ch1", channel_title="Lan's Kitchen",
+    )
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.YOUTUBE_CAPTIONS,
+        youtube_video_id="abc123", title="Pasta",
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="[0] boil pasta")
+    job.refresh_from_db()
+    recipe = Recipe.objects.get(pk=job.recipe_id)
+    assert recipe.creator_id == "ch1"
+    assert recipe.creator.avatar_url == "http://av/ch1.jpg"
+
+
+def test_extraction_creates_creator_when_absent(user):
+    # Cache pruned: no Creator row yet, but the Video still knows the channel ->
+    # create a bare Creator so the recipe still credits the channel.
+    Video.objects.create(
+        video_id="abc123", title="Pasta vid",
+        channel_id="ch9", channel_title="New Chef",
+    )
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.YOUTUBE_CAPTIONS,
+        youtube_video_id="abc123", title="Pasta",
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="[0] boil pasta")
+    job.refresh_from_db()
+    creator = Recipe.objects.get(pk=job.recipe_id).creator
+    assert creator.channel_id == "ch9"
+    assert creator.title == "New Chef"
+
+
+def test_extraction_leaves_creator_null_without_video(user):
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.PASTE_TRANSCRIPT, title="Pasta"
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="boil pasta")
+    job.refresh_from_db()
+    assert Recipe.objects.get(pk=job.recipe_id).creator_id is None
 
 
 def test_failure_marks_job_failed(user):
