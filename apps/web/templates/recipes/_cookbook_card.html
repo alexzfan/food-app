@@ -14,7 +14,7 @@
   <div style="padding:15px 16px 17px;">
     <div class="ceyebrow">{% if recipe.cuisine %}{{ recipe.cuisine|upper }}{% endif %}{% if recipe.cuisine and recipe.meal_type %} · {% endif %}{% if recipe.meal_type %}{{ recipe.get_meal_type_display|upper }}{% endif %}</div>
     <h4 class="rtitle"><a href="{% url 'recipe_detail' recipe.id %}" style="color:inherit;">{{ recipe.title }}</a></h4>
-    {% if recipe.channel_name %}<div class="credit"><span class="av"></span><span class="cn">{{ recipe.channel_name }}</span></div>{% endif %}
+    {% if recipe.channel_name %}<div class="credit"><span class="av"{% if recipe.creator.avatar_url %} style="background-image:url('{{ recipe.creator.avatar_url }}'); background-size:cover; background-position:center;"{% endif %}></span><span class="cn">{{ recipe.channel_name }}</span></div>{% endif %}
     <div class="cfoot">
       {% if recipe.cook_time_display %}<span class="badge">{{ recipe.cook_time_display }}</span>{% endif %}
       {% if recipe.difficulty %}<span class="badge">{{ recipe.difficulty|upper }}</span>{% endif %}
