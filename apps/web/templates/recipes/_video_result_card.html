@@ -9,7 +9,7 @@
   </div>
   <div class="rrow__body">
     <h4 class="rtitle" style="font-size:21px;">{% if video.recipe %}<a href="{% url 'recipe_detail' video.recipe.id %}">{{ video.title }}</a>{% else %}{{ video.title }}{% endif %}</h4>
-    <div class="credit"><span class="av"></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
+    <div class="credit"><span class="av"{% if video.channel_avatar_url %} style="background-image:url('{{ video.channel_avatar_url }}'); background-size:cover; background-position:center;"{% endif %}></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
     {% if video.description %}<p class="rrow__desc">{{ video.description|truncatechars:160 }}</p>{% endif %}
     <div class="rrow__foot" id="action-{{ video.id }}">{% include "recipes/_result_action.html" with layout="list" %}</div>
   </div>
@@ -25,7 +25,7 @@
   </div>
   <div class="rcard__body">
     <h4 class="rtitle">{% if video.recipe %}<a href="{% url 'recipe_detail' video.recipe.id %}">{{ video.title }}</a>{% else %}{{ video.title }}{% endif %}</h4>
-    <div class="credit"><span class="av"></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
+    <div class="credit"><span class="av"{% if video.channel_avatar_url %} style="background-image:url('{{ video.channel_avatar_url }}'); background-size:cover; background-position:center;"{% endif %}></span><span class="credit__name">{{ video.channel_title }}</span>{% if video.view_count_display %}<span class="dot"></span><span class="credit__views">{{ video.view_count_display }} views</span>{% endif %}</div>
     <div class="rcard__action" id="action-{{ video.id }}">{% include "recipes/_result_action.html" with layout="grid" %}</div>
   </div>
 </div>

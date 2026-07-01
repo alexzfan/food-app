@@ -74,7 +74,7 @@
       {% endif %}
       {% if recipe.channel_name or recipe.youtube_video_id %}
       <div class="rv-credit">
-        <span class="rv-credit__avatar"></span>
+        <span class="rv-credit__avatar"{% if recipe.creator.avatar_url %} style="background-image:url('{{ recipe.creator.avatar_url }}'); background-size:cover; background-position:center;"{% endif %}></span>
         {% if recipe.channel_name %}
         <div class="rv-credit__meta">
           <div class="rv-credit__name">{{ recipe.channel_name }}</div>

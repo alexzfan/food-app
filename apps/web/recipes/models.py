@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from . import facets
+from . import facets, youtube
 from .youtube import _format_views, seconds_to_display
 
 
@@ -19,6 +19,10 @@ class Recipe(models.Model):
     description = models.TextField(blank=True)
     thumbnail_url = models.URLField(blank=True)
     channel_name = models.CharField(max_length=255, blank=True)
+    creator = models.ForeignKey(
+        "Creator", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="recipes",
+    )
     ingredients = models.JSONField(default=list)   # [{name, amount, unit?, notes?}]
     instructions = models.JSONField(default=list)  # [{step, text, start?, duration?}]
     tags = models.JSONField(default=list)          # [str]
@@ -54,6 +58,23 @@ class Recipe(models.Model):
         if m > 60:
             return f"{m // 60} HR {m % 60} MIN"
         return f"{m} MIN"
+
+
+class Creator(models.Model):
+    """Canonical YouTube channel metadata, keyed by channel id.
+
+    Normalized out of Video/Recipe so a channel's avatar is stored once and
+    shared across every clip and saved recipe from that creator. Avatars are
+    fetched via channels.list during search (see [[youtube]]) and upserted by
+    [[search_cache]]; recipes point here through Recipe.creator.
+    """
+    channel_id = models.CharField(max_length=64, primary_key=True)
+    title = models.CharField(max_length=255, blank=True)
+    avatar_url = models.URLField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title or self.channel_id
 
 
 class Video(models.Model):
@@ -166,3 +187,9 @@ class ExtractionJob(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    @property
+    def thumbnail_url(self):
+        """Derived hqdefault thumbnail for the pending cookbook card; "" when
+        the job has no source video (e.g. a pasted transcript)."""
+        return youtube.thumbnail_url(self.youtube_video_id)

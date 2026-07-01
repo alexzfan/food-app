@@ -41,9 +41,14 @@ def test_search_maps_and_enriches_fields():
             }
         ]
     }
+    channels_payload = {
+        "items": [
+            {"id": "ch1", "snippet": {"thumbnails": {"default": {"url": "http://av/ch1.jpg"}}}}
+        ]
+    }
     with patch(
         "recipes.youtube.httpx.get",
-        side_effect=[FakeResp(search_payload), FakeResp(details_payload)],
+        side_effect=[FakeResp(search_payload), FakeResp(details_payload), FakeResp(channels_payload)],
     ) as g:
         result = youtube.search_recipe_videos("pasta")
     video = result["videos"][0]
@@ -51,6 +56,7 @@ def test_search_maps_and_enriches_fields():
     assert video["title"] == "Best Pasta"
     assert video["thumbnail_url"] == "http://img/x.jpg"
     assert video["channel_title"] == "Chef"
+    assert video["channel_avatar_url"] == "http://av/ch1.jpg"
     assert video["duration_display"] == "8:42"
     assert video["duration_seconds"] == 522
     assert video["view_count_display"] == "1.2M"
@@ -58,6 +64,61 @@ def test_search_maps_and_enriches_fields():
     assert result["next_page_token"] == "NEXT"
     assert g.call_args_list[0].kwargs["params"]["q"] == "pasta recipe"
     assert g.call_args_list[1].kwargs["params"]["id"] == "abc123"
+
+
+def test_search_attaches_channel_avatar():
+    search_payload = {
+        "items": [
+            {
+                "id": {"videoId": "abc123"},
+                "snippet": {
+                    "title": "Best Pasta", "description": "",
+                    "thumbnails": {"high": {"url": "http://img/x.jpg"}},
+                    "channelTitle": "Chef", "channelId": "ch1",
+                },
+            }
+        ],
+        "nextPageToken": None,
+    }
+    details_payload = {"items": []}
+    channels_payload = {
+        "items": [
+            {"id": "ch1", "snippet": {"thumbnails": {"default": {"url": "http://av/ch1.jpg"}}}}
+        ]
+    }
+    with patch(
+        "recipes.youtube.httpx.get",
+        side_effect=[FakeResp(search_payload), FakeResp(details_payload), FakeResp(channels_payload)],
+    ) as g:
+        result = youtube.search_recipe_videos("pasta")
+    assert result["videos"][0]["channel_avatar_url"] == "http://av/ch1.jpg"
+    # third call is channels.list for the distinct channel id
+    assert g.call_args_list[2].kwargs["params"]["id"] == "ch1"
+
+
+def test_search_channel_avatar_failure_degrades():
+    search_payload = {
+        "items": [
+            {
+                "id": {"videoId": "abc123"},
+                "snippet": {
+                    "title": "Best Pasta", "description": "",
+                    "thumbnails": {"high": {"url": "http://img/x.jpg"}},
+                    "channelTitle": "Chef", "channelId": "ch1",
+                },
+            }
+        ],
+        "nextPageToken": None,
+    }
+
+    def _side_effect(url, **kwargs):
+        if url.endswith("/channels"):
+            raise httpx.HTTPError("boom")
+        return FakeResp({"items": []} if url.endswith("/videos") else search_payload)
+
+    with patch("recipes.youtube.httpx.get", side_effect=_side_effect):
+        result = youtube.search_recipe_videos("pasta")
+    assert result["videos"][0]["channel_avatar_url"] == ""
 
 
 def test_search_enrichment_failure_degrades():
@@ -96,6 +157,12 @@ def test_format_duration():
     assert youtube._format_duration("PT1H2M3S") == (3723, "1:02:03")
     assert youtube._format_duration("") == (None, "")
     assert youtube._format_duration("garbage") == (None, "")
+
+
+def test_thumbnail_url():
+    assert youtube.thumbnail_url("abc123") == "https://i.ytimg.com/vi/abc123/hqdefault.jpg"
+    assert youtube.thumbnail_url("") == ""
+    assert youtube.thumbnail_url(None) == ""
 
 
 def test_format_views():

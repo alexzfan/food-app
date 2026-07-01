@@ -210,7 +210,7 @@ def job_status(request, pk):
 
 def _annotated(qs, user):
     fav = Favorite.objects.filter(user=user, recipe=OuterRef("pk"))
-    return qs.annotate(is_favorite=Exists(fav))
+    return qs.select_related("creator").annotate(is_favorite=Exists(fav))
 
 
 SORTS = {"recent": "Recently added", "quickest": "Quickest first"}
@@ -387,7 +387,9 @@ def favorites(request):
 @login_required
 @onboarding_required
 def recipe_detail(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    recipe = get_object_or_404(
+        Recipe.objects.select_related("creator"), pk=pk, owner=request.user
+    )
     recipe.is_favorite = Favorite.objects.filter(
         user=request.user, recipe=recipe
     ).exists()
