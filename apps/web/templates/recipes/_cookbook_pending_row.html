@@ -1,0 +1,10 @@
+<div class="lrow lrow--pending" id="job-{{ job.id }}"{% if not failed %} hx-get="{% url 'cookbook_job_card' job.id %}?view=list" hx-trigger="load delay:1800ms" hx-swap="outerHTML"{% endif %}>
+  <div class="lthumb" style="background:linear-gradient(150deg, var(--surface-2), color-mix(in srgb, var(--secondary) 18%, var(--surface-2)));">
+    {% if failed %}<span class="play"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span>{% else %}<span class="pending-spin" role="status" aria-label="Extracting recipe"></span>{% endif %}
+  </div>
+  <div style="flex:1; display:flex; flex-direction:column;">
+    <div class="ceyebrow">{% if failed %}EXTRACTION FAILED{% else %}EXTRACTING…{% endif %}</div>
+    <h4 class="ltitle">{{ job.title|default:"Untitled recipe" }}</h4>
+    {% if failed %}<div class="credit"><span class="cn" style="color:var(--ink-2);">{{ job.error|default:"Something went wrong" }}</span></div>{% endif %}
+  </div>
+</div>

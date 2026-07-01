@@ -150,7 +150,7 @@ def extract_from_captions(request):
         title=title,
     )
     run_extraction_job.delay(job.id, transcript=transcript)
-    return render(request, "recipes/_job_status.html", {"job": job})
+    return render(request, "recipes/_extract_done.html", {"job": job})
 
 
 # ---------------------------------------------------------------------------
@@ -308,6 +308,18 @@ def saved(request):
         for key, label in SORTS.items()
     ]
 
+    has_filters = bool(q or fav or any(sel.values()))
+    # In-progress extractions show as pending cookbook cards in the default
+    # (unfiltered) view only: they carry no facet metadata to match against.
+    pending_jobs = []
+    if not has_filters:
+        pending_jobs = list(
+            ExtractionJob.objects.filter(owner=user).exclude(
+                status__in=[ExtractionJob.Status.DONE, ExtractionJob.Status.FAILED]
+            )
+        )
+        total += len(pending_jobs)
+
     return render(request, "recipes/cookbook.html", {
         "recipes": results,
         "total": total,
@@ -325,7 +337,8 @@ def saved(request):
         "fav_url": facets.toggle_param(params, "fav", "1"),
         "chips": chips,
         "clear_url": facets.clear_filters(params),
-        "has_filters": bool(q or fav or any(sel.values())),
+        "has_filters": has_filters,
+        "pending_jobs": pending_jobs,
         "preserved_params": [
             (k, v)
             for k, vals in params.lists()
@@ -334,6 +347,31 @@ def saved(request):
         ],
         "reset_url": facets.clear_filters(params, keep=("sort", "view")),
     })
+
+
+@login_required
+@onboarding_required
+def cookbook_job_card(request, pk):
+    """Poll target for a pending cookbook card. Returns the real recipe card
+    once the job is done, a failed placeholder if it failed, else the pending
+    placeholder (which keeps polling)."""
+    job = get_object_or_404(ExtractionJob, pk=pk, owner=request.user)
+    view = "list" if request.GET.get("view") == "list" else "grid"
+    if job.status == ExtractionJob.Status.DONE and job.recipe_id:
+        recipe = _annotated(
+            Recipe.objects.filter(pk=job.recipe_id), request.user
+        ).first()
+        template = (
+            "recipes/_cookbook_row.html" if view == "list"
+            else "recipes/_cookbook_card.html"
+        )
+        return render(request, template, {"recipe": recipe, "view": view})
+    template = (
+        "recipes/_cookbook_pending_row.html" if view == "list"
+        else "recipes/_cookbook_pending_card.html"
+    )
+    failed = job.status == ExtractionJob.Status.FAILED
+    return render(request, template, {"job": job, "view": view, "failed": failed})
 
 
 @login_required

@@ -9,6 +9,7 @@ urlpatterns = [
     path("youtube/suggest/", views.suggest, name="suggest"),
     path("jobs/start/", views.start_job, name="start_job"),
     path("jobs/<int:pk>/status/", views.job_status, name="job_status"),
+    path("jobs/<int:pk>/card/", views.cookbook_job_card, name="cookbook_job_card"),
     path("saved/", views.saved, name="saved"),
     path("favorites/", views.favorites, name="favorites"),
     path("recipes/<int:pk>/", views.recipe_detail, name="recipe_detail"),

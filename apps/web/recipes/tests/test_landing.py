@@ -39,3 +39,9 @@ def test_suggest_returns_matches(auth_client):
 def test_suggest_empty_query_renders_nothing_substantial(auth_client):
     resp = auth_client.get("/youtube/suggest/", {"q": ""})
     assert resp.status_code == 200
+
+
+def test_discover_loads_fly_script(auth_client):
+    resp = auth_client.get("/")
+    assert resp.status_code == 200
+    assert b"js/extract-fly.js" in resp.content

@@ -445,3 +445,17 @@
   .cookbook .lrow { flex-direction: column; }
   .cookbook .lthumb { width: 100%; }
 }
+
+/* Saved-tab cookbook count badge */
+.nav-badge { display: inline-block; margin-left: 7px; padding: 3px 6px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--on-soft); border: 1px solid var(--accent-line); font-family: var(--font-mono); font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: .02em; vertical-align: middle; }
+.nav-badge--empty { display: none; }
+
+/* Settled state after Extract: recipe is (optimistically) in the cookbook */
+.extract--done { background: var(--accent-soft); color: var(--on-soft); box-shadow: none; cursor: default; }
+.extract--done:hover { background: var(--accent-soft); }
+
+/* In-progress extraction placeholders in the cookbook */
+@keyframes spin { to { transform: rotate(360deg); } }
+.rcard--pending, .lrow--pending { animation: pending-pulse 1.6s ease-in-out infinite; }
+@keyframes pending-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+.pending-spin { width: 26px; height: 26px; border: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); border-right-color: var(--accent); border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; }
