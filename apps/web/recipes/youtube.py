@@ -35,6 +35,18 @@ def seconds_to_display(total):
     return f"{minutes}:{seconds:02d}"
 
 
+def thumbnail_url(video_id):
+    """YouTube video id -> its hqdefault thumbnail URL, "" for a blank id.
+
+    Matches the `high` thumbnail URL the Data API returns (see search()), so a
+    card rendered from just a video id reuses the same browser-cached image the
+    Discover result already loaded.
+    """
+    if not video_id:
+        return ""
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
 def _format_duration(iso):
     """ISO-8601 video duration -> (total_seconds, display) e.g. (522, "8:42")."""
     if not iso:

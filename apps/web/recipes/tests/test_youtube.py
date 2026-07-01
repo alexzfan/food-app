@@ -98,6 +98,12 @@ def test_format_duration():
     assert youtube._format_duration("garbage") == (None, "")
 
 
+def test_thumbnail_url():
+    assert youtube.thumbnail_url("abc123") == "https://i.ytimg.com/vi/abc123/hqdefault.jpg"
+    assert youtube.thumbnail_url("") == ""
+    assert youtube.thumbnail_url(None) == ""
+
+
 def test_format_views():
     assert youtube._format_views(1_200_000) == "1.2M"
     assert youtube._format_views(980_000) == "980K"

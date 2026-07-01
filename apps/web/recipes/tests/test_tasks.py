@@ -86,6 +86,58 @@ def test_extraction_leaves_channel_blank_when_video_uncached(user):
     assert Recipe.objects.get(pk=job.recipe_id).channel_name == ""
 
 
+def test_extraction_copies_thumbnail_from_cached_video(user):
+    # The exact thumbnail URL lives on the cached Video; extraction should
+    # carry it onto the recipe so cookbook cards render an image. Reusing the
+    # same URL the Discover result loaded gives a browser-cache hit.
+    Video.objects.create(
+        video_id="abc123", title="Pasta vid",
+        thumbnail_url="https://i.ytimg.com/vi/abc123/hqdefault.jpg",
+    )
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.YOUTUBE_CAPTIONS,
+        youtube_video_id="abc123", title="Pasta",
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="[0] boil pasta")
+    job.refresh_from_db()
+    assert (
+        Recipe.objects.get(pk=job.recipe_id).thumbnail_url
+        == "https://i.ytimg.com/vi/abc123/hqdefault.jpg"
+    )
+
+
+def test_extraction_derives_thumbnail_when_video_uncached(user):
+    # Cache row pruned but the job still knows the video id -> derive the
+    # deterministic hqdefault URL rather than leaving the card blank.
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.YOUTUBE_CAPTIONS,
+        youtube_video_id="xyz789", title="Pasta",
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="[0] boil pasta")
+    job.refresh_from_db()
+    assert (
+        Recipe.objects.get(pk=job.recipe_id).thumbnail_url
+        == "https://i.ytimg.com/vi/xyz789/hqdefault.jpg"
+    )
+
+
+def test_extraction_leaves_thumbnail_blank_without_video_id(user):
+    # A pasted transcript has no video -> no thumbnail, not a crash or a
+    # broken image URL.
+    job = ExtractionJob.objects.create(
+        owner=user, source=ExtractionJob.Source.PASTE_TRANSCRIPT, title="Pasta"
+    )
+    summary = {"title": "Pasta", "ingredients": [], "instructions": [], "tags": []}
+    with patch("recipes.tasks.ml_client.extract", return_value=summary):
+        run_extraction_job(job.id, transcript="boil pasta")
+    job.refresh_from_db()
+    assert Recipe.objects.get(pk=job.recipe_id).thumbnail_url == ""
+
+
 def test_failure_marks_job_failed(user):
     job = ExtractionJob.objects.create(
         owner=user, source=ExtractionJob.Source.PASTE_TRANSCRIPT
